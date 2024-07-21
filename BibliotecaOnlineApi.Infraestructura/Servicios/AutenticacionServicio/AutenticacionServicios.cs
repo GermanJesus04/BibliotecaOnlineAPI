@@ -43,7 +43,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 //validar email
                 var userExiste = await _userManager.FindByEmailAsync(userRequest.email);
                 if (userExiste != null)
-                    throw new ExcepcionPeticionApi("Email ya existe", 402);
+                    throw new ExcepcionPeticionApi("Email ya existe", 400);
 
                 var nuevoUser = new IdentityUser()
                 {
@@ -54,7 +54,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 var isCreated = await _userManager.CreateAsync(nuevoUser, userRequest.password);
 
                 if (!isCreated.Succeeded)
-                    throw new ExcepcionPeticionApi("Error al registrar datos", 402);
+                    throw new ExcepcionPeticionApi(
+                        isCreated.Errors.FirstOrDefault().Description, 400);
 
                 //generar token
                 var token = GenerarTokenJwt(nuevoUser);
