@@ -67,5 +67,45 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
+        [SwaggerOperation
+      (
+            Summary = "Login Usuario",
+            Description = "Metodo encargado de iniciar sesion en el sistema.",
+            OperationId = "_LoginUser"
+        )
+      ]
+        [SwaggerResponse(400, "Ejecución no exitosa. No se obtuvieron datos correctos.", typeof(RespuestaWebApi<object>))]
+        [SwaggerResponse(500, "Ejecución No exitosa. Fallo al lado del servidor.", typeof(RespuestaWebApi<object>))]
+        [SwaggerResponse(204, "Ejecución exitosa. No se encontraron datos.", typeof(RespuestaWebApi<object>))]
+        [SwaggerResponse(200, "Ejecución exitosa.", typeof(RespuestaWebApi<object>))]
+        [HttpPost("LoginUser")]
+        public async Task<IActionResult> Login([FromBody] LoginUserRequestDTO requestDto)
+        {
+            try
+            {
+                var result = await _autenticacionServicios.loginUser(requestDto);
+                return Ok(result);
+
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
     }
 }

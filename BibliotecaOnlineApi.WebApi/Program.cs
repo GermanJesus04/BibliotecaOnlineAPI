@@ -1,6 +1,8 @@
 using BibliotecaOnlineApi.Infraestructura.Data;
 using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.Interfaces;
+using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio;
+using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces;
 using BibliotecaOnlineApi.Model.Configuracion;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +32,7 @@ builder.Services.AddDbContext<AppDbContext>(opcion =>
 
 //inyeccion servicios
 builder.Services.AddScoped<IAutenticacionServicios, AutenticacionServicios>();
+builder.Services.AddScoped<ILibroServicios, LibroServicios>();
 
 
 //Configuracion de Autenticacion con JWT
@@ -66,7 +69,7 @@ options.SignIn.RequireConfirmedEmail =false)
     .AddEntityFrameworkStores<AppDbContext>();
 
 
-//builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 
 var app = builder.Build();

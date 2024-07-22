@@ -1,19 +1,14 @@
 ﻿using BibliotecaOnlineApi.Infraestructura.Data;
 using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.Interfaces;
-using BibliotecaOnlineApi.Model.Configuracion;
 using BibliotecaOnlineApi.Model.DTOs.UserDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
 {
@@ -92,7 +87,38 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             //}
         }
 
+        public async Task<RespuestaWebApi<string>> loginUser(LoginUserRequestDTO loginRequestDto) 
+        {
+            try
+            {
+                //validar email
+                var userExiste = await _userManager.FindByEmailAsync(loginRequestDto.email);
 
+                if (userExiste == null)
+                    throw new ExcepcionPeticionApi("Credenciales Invalidas", 400);
+
+                //validar  combinacion email-password
+                var isCorrect = await _userManager.CheckPasswordAsync(userExiste, loginRequestDto.password);
+
+                if (isCorrect == false)
+                    throw new ExcepcionPeticionApi("Credenciales Invalidas", 400);
+
+                //generar token 
+                var token = GenerarTokenJwt(userExiste);
+
+                return new RespuestaWebApi<string>()
+                {
+                    exito = true,
+                    mensaje = "Exito",
+                    data = token
+                };
+
+
+            }catch (Exception ex)
+            {
+                throw;
+            }
+        }
 
 
 

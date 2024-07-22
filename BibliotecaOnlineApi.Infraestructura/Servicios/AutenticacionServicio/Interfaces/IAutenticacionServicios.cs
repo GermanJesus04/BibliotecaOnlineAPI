@@ -11,5 +11,6 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.In
     public interface IAutenticacionServicios
     {
         public Task<RespuestaWebApi<string>> UserRegistrar(RegistrarUserRequestDTO userRequest);
+        public Task<RespuestaWebApi<string>> loginUser(LoginUserRequestDTO loginRequestDto);
     }
 }

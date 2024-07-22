@@ -10,6 +10,18 @@ namespace BibliotecaOnlineApi.Model.Modelo
     [Table("PRESTAMO")]
     public class Prestamo : EntidadBase<Guid>
     {
+        public Prestamo()
+        {
+            this.Id = Guid.NewGuid();
+            this.FechaCreacion = DateTime.Now;
+            this.UsuarioCreacion = "admin";
+            this.FechaActualizacion = new DateTime();
+            this.UsuarioActualizacion = string.Empty;
+            this.UsuarioEliminacion = string.Empty;
+            this.FechaEliminacion = new DateTime();
+        }
+
+
         [Column("LIBRO_ID")]
         public int LibroId { get; set; }
         
