@@ -84,5 +84,64 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
+
+        [HttpGet("ObtenerLibroPorId")]
+        public async Task<IActionResult> GetLibroId(Guid id)
+        {
+            try
+            {
+                var result = await _libroServicios.ObtenerLibroPorId(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+
+        [HttpPut("ActualizarLibro")]
+        public async Task<IActionResult> ActualizarLibro(Guid id, LibroRequestDTO libroRequest)
+        {
+            try
+            {
+                var result = await _libroServicios.ActualizarLibro(id, libroRequest);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+
     }
 }

@@ -12,5 +12,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces
     {
         public Task<RespuestaWebApi<LibroResponseDTO>> CrearLibro(LibroRequestDTO libroDto);
         public Task<RespuestaWebApi<IEnumerable<LibroResponseDTO>>> ListarLibros();
+        public Task<RespuestaWebApi<LibroResponseDTO>> ObtenerLibroPorId(Guid id);
+        public Task<RespuestaWebApi<bool>> ActualizarLibro(Guid id, LibroRequestDTO libroDto);
     }
 }

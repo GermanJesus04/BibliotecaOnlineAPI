@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BibliotecaOnlineApi.Infraestructura.Data;
+using BibliotecaOnlineApi.Infraestructura.Mappeos;
 using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces;
 using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
@@ -41,6 +42,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
                     throw new ExcepcionPeticionApi("El libro ingresado ya existe", 400);
 
                 var nuevoLibro = _mappeo.Map<LibroRequestDTO, Libro>(libroDto);
+                nuevoLibro.FechaCreacion = DateTime.UtcNow;
 
                 await _context.Libros.AddAsync(nuevoLibro);
                 var result = await _context.SaveChangesAsync();
@@ -76,6 +78,63 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
             }
         }
 
+        public async Task<RespuestaWebApi<LibroResponseDTO>> ObtenerLibroPorId(Guid id)
+        {
+            try
+            {
+                var result = await _context.Libros.FindAsync(id);
+
+                if (result == null)
+                    throw new ExcepcionPeticionApi("No existen datos asociados al id ingresados", 400);
+
+                return new RespuestaWebApi<LibroResponseDTO>()
+                {
+                    data = _mappeo.Map<LibroResponseDTO>(result)
+                };
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<RespuestaWebApi<bool>> ActualizarLibro(Guid id, LibroRequestDTO libroDto)
+        {
+            try
+            {
+                var buscarLibro = await _context.Libros.FindAsync(id);
+
+                if (buscarLibro == null)
+                    throw new ExcepcionPeticionApi("No existen datos asociados al id ingresados", 400);
+
+                var nombreEnUso = await _context.Libros.FirstOrDefaultAsync(c=>c.Titulo.Equals(libroDto.Titulo));
+
+                if (nombreEnUso != null)
+                    throw new ExcepcionPeticionApi("El Titulo ya esta en uso", 400);
+
+                //mapeamos la info que esta en el dto y se la pasamos a la entidad modificando los valores
+                var config = new MapperConfiguration(cfg => cfg.AddProfile<Maps>());
+                var mapper = new Mapper(config);
+                mapper.Map(libroDto, buscarLibro);
+
+
+                buscarLibro.FechaActualizacion = DateTime.UtcNow;
+                buscarLibro.UsuarioActualizacion = "Admin";
+
+                _context.Libros.Update(buscarLibro);
+                var result = await _context.SaveChangesAsync();
+
+                return new RespuestaWebApi<bool>()
+                {
+                    mensaje = "Libro Actualizado Correctamente",
+                    data = result > 0
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
 
     }
 }

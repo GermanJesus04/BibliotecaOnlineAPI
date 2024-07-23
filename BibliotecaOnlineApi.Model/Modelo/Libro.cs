@@ -13,7 +13,7 @@ namespace BibliotecaOnlineApi.Model.Modelo
         public Libro()
         {
             this.Id = Guid.NewGuid();
-            this.FechaCreacion = DateTime.Now;
+            this.FechaCreacion = new DateTime();
             this.UsuarioCreacion = "admin";
             this.FechaActualizacion = new DateTime();
             this.UsuarioActualizacion = string.Empty;
