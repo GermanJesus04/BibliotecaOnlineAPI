@@ -9,5 +9,6 @@ namespace BibliotecaOnlineApi.Model.Configuracion
     public class JwtConfig
     {
         public string Secret { get; set; }
+        public TimeSpan tiempoVencimiento { get; set; }
     }
 }

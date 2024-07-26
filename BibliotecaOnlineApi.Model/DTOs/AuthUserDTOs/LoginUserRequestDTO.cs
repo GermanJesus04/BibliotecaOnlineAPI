@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BibliotecaOnlineApi.Model.DTOs.UserDTOs
+namespace BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs
 {
     public class LoginUserRequestDTO
     {

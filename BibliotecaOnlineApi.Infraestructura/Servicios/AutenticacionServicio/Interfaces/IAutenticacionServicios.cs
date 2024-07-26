@@ -1,4 +1,5 @@
-﻿using BibliotecaOnlineApi.Model.DTOs.UserDTOs;
+﻿using BibliotecaOnlineApi.Model.Configuracion;
+using BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.In
 {
     public interface IAutenticacionServicios
     {
-        public Task<RespuestaWebApi<string>> UserRegistrar(RegistrarUserRequestDTO userRequest);
-        public Task<RespuestaWebApi<string>> loginUser(LoginUserRequestDTO loginRequestDto);
+        public Task<AuthResult> UserRegistrar(RegistrarUserRequestDTO userRequest);
+        public Task<AuthResult> loginUser(LoginUserRequestDTO loginRequestDto);
     }
 }

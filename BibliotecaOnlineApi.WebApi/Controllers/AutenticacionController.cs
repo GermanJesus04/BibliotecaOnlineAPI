@@ -1,5 +1,5 @@
 ﻿using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.Interfaces;
-using BibliotecaOnlineApi.Model.DTOs.UserDTOs;
+using BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
