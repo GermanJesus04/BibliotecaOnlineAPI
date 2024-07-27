@@ -32,7 +32,7 @@ namespace BibliotecaOnlineApi.Model.Modelo
         public DateTime FechaAgredado { get; set; }
 
         [Column("FECHA_CADUCIDAD")]
-        public DateTime FechaCaducidad { get; set; }
+        public DateTime FechaVencimiento { get; set; }
 
     }
 }

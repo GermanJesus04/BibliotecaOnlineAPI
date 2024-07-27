@@ -26,7 +26,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             get
             {
                 if (string.IsNullOrEmpty(_configuration.GetSection("JwtConfig:tiempoVencimiento").Value))
-                    throw new InvalidOperationException("Variable de entorno encontrada");
+                    throw new InvalidOperationException("Variable de entorno no encontrada");
 
                 return _configuration.GetSection("JwtConfig:tiempoVencimiento").Value;
             }
@@ -36,7 +36,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             get
             {
                 if (string.IsNullOrEmpty(_configuration.GetSection("JwtConfig:Secret").Value))
-                    throw new InvalidOperationException("Variable de entorno encontrada");
+                    throw new InvalidOperationException("Variable de entorno no encontrada");
 
                 return _configuration.GetSection("JwtConfig:Secret").Value;
             }
@@ -155,6 +155,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             }
         }
 
+
         //Metodos Privados
         private async Task<AuthResult> GenerarTokenJwt(IdentityUser user)
         {
@@ -167,6 +168,12 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
 
             ///obtener la llave
             var key = Encoding.ASCII.GetBytes(_JwtSecret);
+
+            if (!TimeSpan.TryParse(_JwtTiempoVencimiento, out TimeSpan tiempoVencimientoSpan))
+                throw new ArgumentException("El valor de tiempo de vencimiento es inválido.");
+
+            DateTime utcNow = DateTime.UtcNow;
+            DateTime tokenExpiration = utcNow.Add(tiempoVencimientoSpan);
 
             ///crear descriptor de token (armar el token)
             var tokenDescriptor = new SecurityTokenDescriptor()
@@ -181,11 +188,14 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 }),
 
                 ///especificar cuanto durara el token
-                Expires = DateTime.UtcNow.Add(TimeSpan.Parse(_JwtTiempoVencimiento)),
-                NotBefore = DateTime.UtcNow,
+                
+                Expires = tokenExpiration,
+                //NotBefore = DateTime.UtcNow,
 
                 ///agregar las credenciales de firma
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),SecurityAlgorithms.HmacSha256)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                                                                      SecurityAlgorithms.HmacSha256)
+
             };
 
             ///el TokenHandlet tiene la funcionalidad de convertir un dato de tipo SegurityToken a string, por eso el write
@@ -202,7 +212,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 JwtId = token.Id,
                 Token = GeneradorCadenasAleatorias(23), ///generar refresh token
                 FechaAgredado = DateTime.UtcNow,
-                FechaCaducidad = DateTime.UtcNow.AddMonths(6),
+                FechaVencimiento = DateTime.UtcNow.AddMonths(6),
                 EstaRevocado = false,
                 EstaUsado = false,
                 UserId = user.Id
@@ -223,20 +233,27 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
 
         private async Task<AuthResult> VerificarYGenerarToken(TokenRequest tokenRequest)
         {
+
+            // "JwtSecurityTokenHandler" Esta es una clase de.NET que se utiliza para
+            // crear, leer, validar y escribir tokens de seguridad JWT(JSON Web Tokens).
             var ManejadorTokenJwt = new JwtSecurityTokenHandler();
+
             try
             {
                 _parametrosValidacionToken.ValidateLifetime = false; //debe ser true, false solo para testing
 
                 //le pasamos el toke, los parametros  y nos traera si es validado o no
-                var tokenVerificando = ManejadorTokenJwt.ValidateToken(tokenRequest.Token, 
+                var tokenVerificacion = ManejadorTokenJwt.ValidateToken(tokenRequest.Token, 
                                             _parametrosValidacionToken, out var TokenValidado);
 
-                //***validar que el token cumpla algunas reglas definidas
+                //***validar que el token es JWT y debe cumplir ciertas reglas
 
-                ///Regla 1: validar que use el algoritmo 256
-                if(TokenValidado is JwtSecurityToken jwtSecurityToken)
+                //*Regla 1: validar soutiliza el algoritmo HMAC-SHA256
+
+                ///Comprueba si el token validado es un "JwtSecurityToken" (pertenece a jwt).
+                if (TokenValidado is JwtSecurityToken jwtSecurityToken)
                 {
+                    //Comprueba si el algoritmo utilizado en el header del token es HMAC-SHA256.
                     var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, 
                         StringComparison.InvariantCultureIgnoreCase);
 
@@ -244,17 +261,18 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                         return null;
                 }
 
-                //fecha de vencimiento del token 
-                var FechaCaducidadUTC = long.Parse(tokenVerificando.Claims.FirstOrDefault(x =>
+                //verificar cuando se genero este token que nos traen
+                var FechaVencimientoUTC = long.Parse(tokenVerificacion.Claims.FirstOrDefault(x =>
                                                 x.Type == JwtRegisteredClaimNames.Exp).Value);
 
-                var fechaCaducidad = FechaUnidadxMarcaDeTiempo(FechaCaducidadUTC);
+                var fechaVencimiento = FechaUnidadxMarcaDeTiempo(FechaVencimientoUTC);
 
-                if (fechaCaducidad > DateTime.Now)
+                if (fechaVencimiento > DateTime.UtcNow)
                     throw new ExcepcionPeticionApi("Token Vencido",400);
 
-                //comparar con el token almacenado el que generamos random
-                var tokenAlmacenado = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.Token == tokenRequest.RefreshToken);
+                //Verificar si el token pertece al usuario
+                var tokenAlmacenado = await _context.RefreshTokens.FirstOrDefaultAsync(x 
+                                                        =>x.Token == tokenRequest.RefreshToken);
 
                 if (tokenAlmacenado == null)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
@@ -266,24 +284,36 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
 
                 //verificar jti sea el mismo (aparece en los claims de generar token)
-
-                var jti = tokenVerificando.Claims.FirstOrDefault(x=> x.Type == JwtRegisteredClaimNames.Jti).Value;
+                var jti = tokenVerificacion.Claims.FirstOrDefault(x=> x.Type == JwtRegisteredClaimNames.Jti).Value;
 
                 if(tokenAlmacenado.JwtId != jti)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
                 
                 //comparar fecha de caducidad
-                if (tokenAlmacenado.FechaCaducidad < DateTime.UtcNow)
+                if (tokenAlmacenado.FechaVencimiento < DateTime.UtcNow)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
                 
                 
-                return null;
+                //el refresh token se empezara a usar, debe actualizarlo y guardarlo
+                tokenAlmacenado.EstaUsado = true;
+                _context.RefreshTokens.Update(tokenAlmacenado);
+                await _context.SaveChangesAsync();
+
+                //generar nuevo refresh token para el usuario
+                var dbUser = await _userManager.FindByIdAsync(tokenAlmacenado.UserId);
+
+                if (dbUser == null)
+                    throw new ExcepcionPeticionApi("token invalido", 400);
+
+                return await GenerarTokenJwt(dbUser);
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 throw;
+                
+                //nota: el flujo de este metodo esta en el diagrama
             }
         }
 

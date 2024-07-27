@@ -107,5 +107,45 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
+        [SwaggerOperation
+     (
+           Summary = "Refresh token",
+           Description = "Metodo encargado de refrescar el token del ussuario.",
+           OperationId = "_RefreshToken"
+       )
+     ]
+        [SwaggerResponse(400, "Ejecución no exitosa. No se obtuvieron datos correctos.", typeof(RespuestaWebApi<object>))]
+        [SwaggerResponse(500, "Ejecución No exitosa. Fallo al lado del servidor.", typeof(RespuestaWebApi<object>))]
+        [SwaggerResponse(204, "Ejecución exitosa. No se encontraron datos.", typeof(RespuestaWebApi<object>))]
+        [SwaggerResponse(200, "Ejecución exitosa.", typeof(RespuestaWebApi<object>))]
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken([FromBody] TokenRequest requestDto)
+        {
+            try
+            {
+                var result = await _autenticacionServicios.UserTokenRefresh(requestDto);
+                return Ok(result);
+
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
     }
 }

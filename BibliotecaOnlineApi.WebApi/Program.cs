@@ -47,8 +47,9 @@ var ParametrosValidacionToken = new TokenValidationParameters()
     IssuerSigningKey = new SymmetricSecurityKey(key), //compara nuestra clave con la que el token envia, y deben ser iguales (simetria)
     ValidateIssuer = false, ///debe ser true, pero en proyecto local al generarlo causa un problema, para fines de prueba se pone false
     ValidateAudience = false, ///solo para fines de prueba es falso
-    RequireExpirationTime = false,///solo para practica, ya que los token jwt son de corta duracion, solo viven 30 segundos, y no tener que generar otros
-    ValidateLifetime = true
+    ValidateLifetime = true,
+    RequireExpirationTime = false ///solo para practica, ya que los token jwt son de corta duracion, solo viven 30 segundos, y no tener que generar otros
+    //ClockSkew = TimeSpan.Zero
 };
 
 
