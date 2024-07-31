@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
+using BibliotecaOnlineApi.Model.DTOs.PrestamosDTOs;
+using BibliotecaOnlineApi.Model.DTOs.Usuario;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
@@ -15,11 +17,25 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
         public Maps()
         {
             //fuente, destino
- 
+
             CreateMap<Libro, LibroRequestDTO>()
+            #region mapeo libro - request
+                .ForMember(dest => dest.Titulo,
+                    opc => opc.MapFrom((fuente, dest) =>
+                    string.IsNullOrEmpty(fuente.Titulo) ? dest.Titulo : fuente.Titulo))
+
+                .ForMember(dest => dest.Autor,
+                    opc => opc.MapFrom((fuente, dest) =>
+                    string.IsNullOrEmpty(fuente.Autor) ? dest.Autor : fuente.Autor))
+
+                .ForMember(dest => dest.Genero,
+                    opc => opc.MapFrom((fuente, dest) =>
+                    string.IsNullOrEmpty(fuente.Genero) ? dest.Genero : fuente.Genero))
                .ReverseMap();
+            #endregion
 
             CreateMap<Libro, LibroResponseDTO>()
+            #region mapeo libro - response
                 .ForMember(dest => dest.Titulo,
                     opc => opc.MapFrom((fuente, dest) => 
                     string.IsNullOrEmpty(fuente.Titulo) ? dest.Titulo : fuente.Titulo))
@@ -31,6 +47,16 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
                 .ForMember(dest => dest.Genero,
                     opc => opc.MapFrom((fuente, dest) =>
                     string.IsNullOrEmpty(fuente.Genero) ? dest.Genero: fuente.Genero))
+                .ReverseMap();
+            #endregion
+
+            CreateMap<Prestamo, PrestamoRequestDTO>()
+                .ReverseMap();
+
+            CreateMap<Prestamo, PrestamoResponseDTO>()
+                .ReverseMap();
+
+            CreateMap<Cliente, ClienteDTO>()
                 .ReverseMap();
 
         }

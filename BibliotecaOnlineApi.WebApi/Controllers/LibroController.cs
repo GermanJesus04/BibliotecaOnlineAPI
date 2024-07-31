@@ -142,6 +142,61 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
+        [HttpPut("BorrarLibro")]
+        public async Task<IActionResult> BorrarLibro(Guid id)
+        {
+            try
+            {
+                var result = await _libroServicios.SoftDeleteLibro(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+        [HttpPut("EliminarLibro")]
+        public async Task<IActionResult> EliminarLibro(Guid id)
+        {
+            try
+            {
+                var result = await _libroServicios.HardDeleteLibro(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
 
     }
 }

@@ -154,7 +154,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 throw;
             }
         }
-
+          
 
         //Metodos Privados
         private async Task<AuthResult> GenerarTokenJwt(IdentityUser user)
@@ -284,7 +284,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
 
                 //verificar jti sea el mismo (aparece en los claims de generar token)
-                var jti = tokenVerificacion.Claims.FirstOrDefault(x=> x.Type == JwtRegisteredClaimNames.Jti).Value;
+                var jti = tokenVerificacion.Claims.FirstOrDefault(x=> 
+                                                x.Type == JwtRegisteredClaimNames.Jti).Value;
 
                 if(tokenAlmacenado.JwtId != jti)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);

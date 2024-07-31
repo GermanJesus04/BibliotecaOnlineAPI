@@ -48,8 +48,8 @@ var ParametrosValidacionToken = new TokenValidationParameters()
     ValidateIssuer = false, ///debe ser true, pero en proyecto local al generarlo causa un problema, para fines de prueba se pone false
     ValidateAudience = false, ///solo para fines de prueba es falso
     ValidateLifetime = true,
-    RequireExpirationTime = false ///solo para practica, ya que los token jwt son de corta duracion, solo viven 30 segundos, y no tener que generar otros
-    //ClockSkew = TimeSpan.Zero
+    RequireExpirationTime = false, ///solo para practica, ya que los token jwt son de corta duracion, solo viven 30 segundos, y no tener que generar otros
+    ClockSkew = TimeSpan.Zero
 };
 
 

@@ -65,8 +65,11 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
         {
             try
             {
-                var result = await _context.Libros.ToListAsync();
+                var result = await _context.Libros.Where(x=>x.Eliminado == false).ToListAsync();
 
+                if(result.Count() <= 0 || result is null)
+                    throw new ExcepcionPeticionApi("no hay libros en el sistema", 402);
+                
                 return new RespuestaWebApi<IEnumerable<LibroResponseDTO>>
                 {
                     data = _mappeo.Map<IEnumerable<LibroResponseDTO>>(result)
@@ -136,6 +139,57 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
             }
         }
 
+        public async Task<RespuestaWebApi<bool>> SoftDeleteLibro(Guid id)
+        {
+            try
+            {
+                var buscarLibro = await _context.Libros.FindAsync(id);
 
+                if (buscarLibro is null)
+                    throw new ExcepcionPeticionApi("No se hallaron datos relacionados", 204);
+
+                buscarLibro.Eliminado = true;
+                buscarLibro.FechaEliminacion = DateTime.UtcNow;
+                buscarLibro.UsuarioEliminacion = "Admin";
+
+                _context.Libros.Update(buscarLibro);
+                await _context.SaveChangesAsync();
+
+                return new RespuestaWebApi<bool>()
+                {
+                    mensaje = "Libro Eliminado con exito",
+                    data = true
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<RespuestaWebApi<bool>> HardDeleteLibro(Guid id)
+        {
+            try
+            {
+                var buscarLibro = await _context.Libros.FindAsync(id);
+                
+                if (buscarLibro is null)
+                    throw new ExcepcionPeticionApi("No se hallaron datos relacionados", 204);
+
+                _context.Libros.Remove(buscarLibro);
+                await _context.SaveChangesAsync();
+
+                return new RespuestaWebApi<bool>()
+                {
+                    mensaje = "Libro Eliminado con exito",
+                    data = true
+                };
+
+            }catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

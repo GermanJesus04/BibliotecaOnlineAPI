@@ -14,5 +14,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces
         public Task<RespuestaWebApi<IEnumerable<LibroResponseDTO>>> ListarLibros();
         public Task<RespuestaWebApi<LibroResponseDTO>> ObtenerLibroPorId(Guid id);
         public Task<RespuestaWebApi<bool>> ActualizarLibro(Guid id, LibroRequestDTO libroDto);
+        public Task<RespuestaWebApi<bool>> SoftDeleteLibro(Guid id);
+        public Task<RespuestaWebApi<bool>> HardDeleteLibro(Guid id);
     }
 }
