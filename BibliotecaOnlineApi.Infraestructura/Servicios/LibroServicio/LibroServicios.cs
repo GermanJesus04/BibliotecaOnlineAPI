@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using BibliotecaOnlineApi.Infraestructura.Data;
+using BibliotecaOnlineApi.Infraestructura.HelpierConfiguracion;
 using BibliotecaOnlineApi.Infraestructura.Mappeos;
 using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces;
 using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
 {
@@ -61,18 +64,33 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
             }
         }
 
-        public async Task<RespuestaWebApi<IEnumerable<LibroResponseDTO>>> ListarLibros()
+        public async Task<RespuestaWebApi<PaginadoResult<LibroResponseDTO>>> 
+            ListarLibros(LibroFiltroDto? filtros, int pagina, int tamañoPagina)
         {
             try
             {
-                var result = await _context.Libros.Where(x=>x.Eliminado == false).ToListAsync();
+                var query = _context.Libros.AsQueryable().Where(x=>x.Eliminado == false);
 
-                if(result.Count() <= 0 || result is null)
+                if(!string.IsNullOrEmpty(filtros.Titulo))
+                    query = query.Where(x => x.Titulo.Equals(filtros.Titulo));
+
+                if (!string.IsNullOrEmpty(filtros.Genero))
+                    query = query.Where(x => x.Genero.Equals(filtros.Genero));
+
+                if (!string.IsNullOrEmpty(filtros.Autor))
+                    query = query.Where(x => x.Autor.Equals(filtros.Autor));
+
+
+                if (query.Count() <= 0)
                     throw new ExcepcionPeticionApi("no hay libros en el sistema", 402);
-                
-                return new RespuestaWebApi<IEnumerable<LibroResponseDTO>>
+
+
+                var libros = await query.ProjectTo<LibroResponseDTO>(_mappeo.ConfigurationProvider)
+                                        .ObtenerPaginado(pagina, tamañoPagina);
+
+                return new RespuestaWebApi<PaginadoResult<LibroResponseDTO>>
                 {
-                    data = _mappeo.Map<IEnumerable<LibroResponseDTO>>(result)
+                    data = libros
                 };
             }
             catch (Exception ex)

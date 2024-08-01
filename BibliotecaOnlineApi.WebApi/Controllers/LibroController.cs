@@ -57,11 +57,11 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpGet("ListarLibros")]
-        public async Task<IActionResult> ListarLibros()
+        public async Task<IActionResult> ListarLibros(LibroFiltroDto? filtros, int pagina, int tamañoPagina)
         {
             try
             {
-                var result = await _libroServicios.ListarLibros();
+                var result = await _libroServicios.ListarLibros(filtros, pagina, tamañoPagina);
                 return Ok(result);
             }
             catch (ExcepcionPeticionApi ex)
