@@ -27,8 +27,4 @@
     <ProjectReference Include="..\BibliotecaOnlineApi.Model\BibliotecaOnlineApi.Model.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Servicios\PrestamoServicio\Interfaces\" />
-  </ItemGroup>
-
 </Project>

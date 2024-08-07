@@ -3,7 +3,10 @@ using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.Interfaces;
 using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces;
+using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio;
+using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio.Interfaces;
 using BibliotecaOnlineApi.Model.Configuracion;
+using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +34,7 @@ builder.Services.AddDbContext<AppDbContext>(opcion =>
 });
 
 
-//Configuracion de Autenticacion con JWT
+//***Configuracion de Autenticacion con JWT***
 ///Nos permitira usar la clave en la clase
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
 
@@ -53,32 +56,45 @@ var ParametrosValidacionToken = new TokenValidationParameters()
 };
 
 
-builder.Services.AddAuthentication(options =>
+builder.Services
+    .AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
-}).AddJwtBearer( jwt =>
+})
+    .AddJwtBearer( jwt =>
     {
         jwt.SaveToken = true;
         jwt.TokenValidationParameters = ParametrosValidacionToken;
     });
 
-builder.Services.AddSingleton(ParametrosValidacionToken);
-
+builder.Services
+    .AddSingleton(ParametrosValidacionToken);
 
 //agregar el administrador de identidad predeterminado
-builder.Services.AddDefaultIdentity<IdentityUser>(options => 
-options.SignIn.RequireConfirmedEmail =false)
-    .AddEntityFrameworkStores<AppDbContext>();
+builder.Services
+    .AddDefaultIdentity<IdentityUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.SignIn.RequireConfirmedEmail = false; //sera true
+
+        options.Lockout.AllowedForNewUsers = false; //sera true 
+        //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(4);
+        options.Lockout.MaxFailedAccessAttempts = 5;  //intentos de acceso
+
+    })
+
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddPasswordValidator<PasswordValidator<IdentityUser>>()
+    ;
 
 
 //inyeccion servicios
-
 builder.Services.AddScoped<IAutenticacionServicios, AutenticacionServicios>();
 builder.Services.AddScoped<ILibroServicios, LibroServicios>();
-
+builder.Services.AddScoped<IPrestamoServicios, PrestamoServicios>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 

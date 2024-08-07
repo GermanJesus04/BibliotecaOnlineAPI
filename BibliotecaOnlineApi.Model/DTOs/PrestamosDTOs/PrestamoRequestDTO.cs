@@ -12,16 +12,14 @@ namespace BibliotecaOnlineApi.Model.DTOs.PrestamosDTOs
     public class PrestamoRequestDTO
     {
         [Required]
-        public int LibroId { get; set; }
+        public Guid LibroId { get; set; }
 
         [Required]
-        public int UsuarioId { get; set; }
+        public string UsuarioId { get; set; }
 
         [Required]
-        public DateTime FechaPrestamo { get; set; }
+        public int DiasPrestado { get; set; }
 
-        [Required]
-        public DateTime? FechaDevolucion { get; set; }
 
     }
 }

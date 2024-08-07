@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BibliotecaOnlineApi.Infraestructura.Migrations
 {
     /// <inheritdoc />
-    public partial class MigracionInicial : Migration
+    public partial class MigracionIncial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,34 +51,12 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CLIENTE",
-                columns: table => new
-                {
-                    ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    NOMBRE = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    APELLIDO = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EMAIL = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NUMERO_TELEFONO = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FECHA_CREACION = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    USUARIO_CREACION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
-                    FECHA_ACTUALIZACION = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    USUARIO_ACTUALIZACION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
-                    REGISTRO_ELIMINADO = table.Column<bool>(type: "bit", nullable: false),
-                    FECHA_ELIMINACION = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    USUARIO_ELIMINACION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CLIENTE", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "LIBRO",
                 columns: table => new
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TITULO = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AUTOR = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TITULO = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AUTOR = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     GENERO = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FECHA_PUBLICACION = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FECHA_CREACION = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -92,6 +70,25 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LIBRO", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "REFRESH_TOKEN",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    USER_ID = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TOKEN = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    JWT_ID = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TOKEN_USADO = table.Column<bool>(type: "bit", nullable: false),
+                    TOKEN_REVOCADO = table.Column<bool>(type: "bit", nullable: false),
+                    FECHA_AGREGADO = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FECHA_CADUCIDAD = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_REFRESH_TOKEN", x => x.ID);
                 });
 
             migrationBuilder.CreateTable(
@@ -140,8 +137,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
@@ -185,8 +182,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -205,12 +202,10 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 columns: table => new
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LIBRO_ID = table.Column<int>(type: "int", nullable: false),
-                    USUARIO_ID = table.Column<int>(type: "int", nullable: false),
+                    LIBRO_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    USUARIO_ID = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FECHA_PRESTAMO = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FECHA_DEVOLUCION = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LibroId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UsuarioId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FECHA_CREACION = table.Column<DateTime>(type: "datetime2", nullable: false),
                     USUARIO_CREACION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     FECHA_ACTUALIZACION = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -223,14 +218,14 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 {
                     table.PrimaryKey("PK_PRESTAMO", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_PRESTAMO_CLIENTE_UsuarioId1",
-                        column: x => x.UsuarioId1,
-                        principalTable: "CLIENTE",
-                        principalColumn: "ID",
+                        name: "FK_PRESTAMO_AspNetUsers_USUARIO_ID",
+                        column: x => x.USUARIO_ID,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PRESTAMO_LIBRO_LibroId1",
-                        column: x => x.LibroId1,
+                        name: "FK_PRESTAMO_LIBRO_LIBRO_ID",
+                        column: x => x.LIBRO_ID,
                         principalTable: "LIBRO",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
@@ -276,14 +271,19 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PRESTAMO_LibroId1",
-                table: "PRESTAMO",
-                column: "LibroId1");
+                name: "IX_LIBRO_TITULO_AUTOR",
+                table: "LIBRO",
+                columns: new[] { "TITULO", "AUTOR" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_PRESTAMO_UsuarioId1",
+                name: "IX_PRESTAMO_LIBRO_ID",
                 table: "PRESTAMO",
-                column: "UsuarioId1");
+                column: "LIBRO_ID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PRESTAMO_USUARIO_ID",
+                table: "PRESTAMO",
+                column: "USUARIO_ID");
         }
 
         /// <inheritdoc />
@@ -308,13 +308,13 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 name: "PRESTAMO");
 
             migrationBuilder.DropTable(
+                name: "REFRESH_TOKEN");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "CLIENTE");
 
             migrationBuilder.DropTable(
                 name: "LIBRO");

@@ -3,12 +3,7 @@ using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
 using BibliotecaOnlineApi.Model.DTOs.PrestamosDTOs;
 using BibliotecaOnlineApi.Model.DTOs.Usuario;
 using BibliotecaOnlineApi.Model.Modelo;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace BibliotecaOnlineApi.Infraestructura.Mappeos
 {
@@ -55,9 +50,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
 
             CreateMap<Prestamo, PrestamoResponseDTO>()
                 .ReverseMap();
-
-            CreateMap<Cliente, ClienteDTO>()
-                .ReverseMap();
+            
+            CreateMap<IdentityUser, UsuarioDto>();
 
         }
     }

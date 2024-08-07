@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BibliotecaOnlineApi.Infraestructura.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240721004147_Migracion Inicial")]
-    partial class MigracionInicial
+    [Migration("20240807211837_MigracionIncial")]
+    partial class MigracionIncial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,72 +25,6 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BibliotecaOnlineApi.Model.Modelo.Cliente", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("ID");
-
-                    b.Property<string>("Apellido")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("APELLIDO");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit")
-                        .HasColumnName("REGISTRO_ELIMINADO");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("EMAIL");
-
-                    b.Property<DateTime?>("FechaActualizacion")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_ACTUALIZACION");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_CREACION");
-
-                    b.Property<DateTime?>("FechaEliminacion")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_ELIMINACION");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("NOMBRE");
-
-                    b.Property<string>("NumeroTelefono")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("NUMERO_TELEFONO");
-
-                    b.Property<string>("UsuarioActualizacion")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("USUARIO_ACTUALIZACION");
-
-                    b.Property<string>("UsuarioCreacion")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("USUARIO_CREACION");
-
-                    b.Property<string>("UsuarioEliminacion")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("USUARIO_ELIMINACION");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CLIENTE");
-                });
-
             modelBuilder.Entity("BibliotecaOnlineApi.Model.Modelo.Libro", b =>
                 {
                     b.Property<Guid>("Id")
@@ -100,7 +34,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
 
                     b.Property<string>("Autor")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("AUTOR");
 
                     b.Property<bool>("Eliminado")
@@ -130,7 +64,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
 
                     b.Property<string>("Titulo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("TITULO");
 
                     b.Property<string>("UsuarioActualizacion")
@@ -152,6 +86,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                         .HasColumnName("USUARIO_ELIMINACION");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Titulo", "Autor");
 
                     b.ToTable("LIBRO");
                 });
@@ -187,12 +123,9 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("FECHA_PRESTAMO");
 
-                    b.Property<int>("LibroId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("LibroId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("LIBRO_ID");
-
-                    b.Property<Guid>("LibroId1")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UsuarioActualizacion")
                         .IsRequired()
@@ -212,20 +145,63 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("USUARIO_ELIMINACION");
 
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("USUARIO_ID");
-
-                    b.Property<Guid>("UsuarioId1")
-                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LibroId1");
+                    b.HasIndex("LibroId");
 
-                    b.HasIndex("UsuarioId1");
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("PRESTAMO");
+                });
+
+            modelBuilder.Entity("BibliotecaOnlineApi.Model.Modelo.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("EstaRevocado")
+                        .HasColumnType("bit")
+                        .HasColumnName("TOKEN_REVOCADO");
+
+                    b.Property<bool>("EstaUsado")
+                        .HasColumnType("bit")
+                        .HasColumnName("TOKEN_USADO");
+
+                    b.Property<DateTime>("FechaAgredado")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_AGREGADO");
+
+                    b.Property<DateTime>("FechaVencimiento")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_CADUCIDAD");
+
+                    b.Property<string>("JwtId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("JWT_ID");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("TOKEN");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("USER_ID");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("REFRESH_TOKEN");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -373,10 +349,12 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -413,10 +391,12 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -430,13 +410,13 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 {
                     b.HasOne("BibliotecaOnlineApi.Model.Modelo.Libro", "Libro")
                         .WithMany()
-                        .HasForeignKey("LibroId1")
+                        .HasForeignKey("LibroId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BibliotecaOnlineApi.Model.Modelo.Cliente", "Usuario")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Usuario")
                         .WithMany()
-                        .HasForeignKey("UsuarioId1")
+                        .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

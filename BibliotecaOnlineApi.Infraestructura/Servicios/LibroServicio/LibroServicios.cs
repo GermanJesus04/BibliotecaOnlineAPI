@@ -28,21 +28,11 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
         {
             try
             {
-                var libroExiste = await (
-                    from lib in _context.Libros
-                    where lib.Titulo.Equals(libroDto.Titulo)
-                    select new Libro()
-                    {
-                        Autor = lib.Titulo,
-                        Genero = lib.Genero,
-                        Titulo = lib.Titulo,
-                        Id = lib.Id,
-                        FechaPublicacion = lib.FechaPublicacion
-                    }
-                    ).FirstOrDefaultAsync();
+                var libroExiste = _context.Libros.AsQueryable().Where(c=>c.Titulo.Equals(libroDto.Titulo));
 
-                if (libroExiste != null)
+                if (libroExiste.Count() > 0)
                     throw new ExcepcionPeticionApi("El libro ingresado ya existe", 400);
+
 
                 var nuevoLibro = _mappeo.Map<LibroRequestDTO, Libro>(libroDto);
                 nuevoLibro.FechaCreacion = DateTime.UtcNow;
@@ -79,7 +69,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
 
                 if (!string.IsNullOrEmpty(filtros.Autor))
                     query = query.Where(x => x.Autor.Equals(filtros.Autor));
-
+                    
 
                 if (query.Count() <= 0)
                     throw new ExcepcionPeticionApi("no hay libros en el sistema", 402);

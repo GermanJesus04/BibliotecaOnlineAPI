@@ -82,30 +82,19 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 //generar token
                 var result = await GenerarTokenJwt(nuevoUser);
 
-                //crear cliente
-                var client = new Cliente()
-                {
-                    Nombre = userRequest.name,
-                    Apellido = userRequest.Apellido,
-                    Email = userRequest.email,
-                    NumeroTelefono = userRequest.NumeroTelefono.ToString()
-                };
-
-                await _context.Clientes.AddAsync(client);
-                await _context.SaveChangesAsync();
-
+                
                 return result;
 
 
-                }
-                catch (Exception ex)
-                {
-                    // Revertir la transacción en caso de error
-                    var transaction = _context.Database.BeginTransaction();
-                    transaction.Rollback();
+            }
+            catch (Exception ex)
+            {
+                // Revertir la transacción en caso de error
+                var transaction = _context.Database.BeginTransaction();
+                transaction.Rollback();
 
-                    throw ex;
-                }
+                throw ex;
+            }
             //}
         }
 
