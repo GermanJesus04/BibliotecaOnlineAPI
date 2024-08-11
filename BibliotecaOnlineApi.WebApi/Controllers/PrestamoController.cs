@@ -1,4 +1,5 @@
 ﻿using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio.Interfaces;
+using BibliotecaOnlineApi.Model.DTOs.PrestamosDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +26,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpGet("ListarPrestamos")]
-        public async Task<IActionResult> ObtenerPrestamos(Guid? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+        public async Task<IActionResult> ObtenerPrestamos(string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
         {
             try
             {
@@ -52,6 +53,89 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
+        [HttpPost("CrearPrestamo")]
+        public async Task<IActionResult> CrearPrestamos(PrestamoRequestDTO prestamoDto)
+        {
+            try
+            {
+                var result = await _prestamoServicios.CrearPrestamo(prestamoDto);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+        [HttpPut("ActualizarPrestamo")]
+        public async Task<IActionResult> ActPrestamos(Guid id,PrestamoRequestDTO prestamoDto)
+        {
+            try
+            {
+                var result = await _prestamoServicios.ActualizarPrestamo(id, prestamoDto);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+        [HttpPut("AnularPrestamo")]
+        public async Task<IActionResult> BorrarPrestamos(Guid id)
+        {
+            try
+            {
+                var result = await _prestamoServicios.SoftDelete(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
 
     }
 }

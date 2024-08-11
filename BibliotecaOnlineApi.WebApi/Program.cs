@@ -5,6 +5,8 @@ using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces;
 using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio.Interfaces;
+using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio;
+using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio.Interfaces;
 using BibliotecaOnlineApi.Model.Configuracion;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -95,6 +97,7 @@ builder.Services
 builder.Services.AddScoped<IAutenticacionServicios, AutenticacionServicios>();
 builder.Services.AddScoped<ILibroServicios, LibroServicios>();
 builder.Services.AddScoped<IPrestamoServicios, PrestamoServicios>();
+builder.Services.AddScoped<IUsuarioServicios, UsuarioServicios>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 

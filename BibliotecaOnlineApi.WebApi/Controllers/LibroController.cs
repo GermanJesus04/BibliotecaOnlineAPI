@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("[controller]")]
     [ApiController]
     public class LibroController : ControllerBase

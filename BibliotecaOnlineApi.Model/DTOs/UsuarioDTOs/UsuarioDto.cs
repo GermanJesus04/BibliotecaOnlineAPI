@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BibliotecaOnlineApi.Model.DTOs.Usuario
+namespace BibliotecaOnlineApi.Model.DTOs.UsuarioDTOs
 {
     public class UsuarioDto
     {
-        public string Id { get; set; }
         public string UserName { get; set; }
         public string Email { get; set; }
     }

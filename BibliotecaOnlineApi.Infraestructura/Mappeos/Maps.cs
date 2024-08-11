@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
 using BibliotecaOnlineApi.Model.DTOs.PrestamosDTOs;
-using BibliotecaOnlineApi.Model.DTOs.Usuario;
+using BibliotecaOnlineApi.Model.DTOs.UsuarioDTOs;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Identity;
 
@@ -33,7 +33,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
             #region mapeo libro - response
                 .ForMember(dest => dest.Titulo,
                     opc => opc.MapFrom((fuente, dest) => 
-                    string.IsNullOrEmpty(fuente.Titulo) ? dest.Titulo : fuente.Titulo))
+                    string.IsNullOrEmpty(fuente.Titulo) ? dest.Titulo : fuente.Titulo)
+                    )
 
                 .ForMember(dest => dest.Autor,
                     opc => opc.MapFrom((fuente, dest) =>
@@ -42,6 +43,12 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
                 .ForMember(dest => dest.Genero,
                     opc => opc.MapFrom((fuente, dest) =>
                     string.IsNullOrEmpty(fuente.Genero) ? dest.Genero: fuente.Genero))
+                .ForMember(
+                    dest => dest.FechaPublicacion, opc => opc
+                    .MapFrom(
+                        fuente => fuente.FechaPublicacion.ToString("yyyy/MM/dd")
+                    )
+                )
                 .ReverseMap();
             #endregion
 
@@ -49,9 +56,24 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
                 .ReverseMap();
 
             CreateMap<Prestamo, PrestamoResponseDTO>()
+            #region Prestamo - Response
+                .ForMember(
+                    dest => dest.FechaDevolucion, opc => opc
+                    .MapFrom(
+                        fuente => fuente.FechaDevolucion.Value.ToString("yyyy/MM/dd")
+                    )
+                )
+                .ForMember(
+                    dest => dest.FechaPrestamo, opc => opc
+                    .MapFrom(
+                        fuente => fuente.FechaPrestamo.ToString("yyyy/MM/dd")
+                    )
+                )
+            #endregion
                 .ReverseMap();
             
             CreateMap<IdentityUser, UsuarioDto>();
+            CreateMap<IdentityUser, UserResponseDTO>();
 
         }
     }

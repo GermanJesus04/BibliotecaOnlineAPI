@@ -22,6 +22,6 @@ namespace BibliotecaOnlineApi.Model.DTOs.LibroDTOs
         public string Genero { get; set; }
 
         [Required]
-        public DateTime FechaPublicacion { get; set; }
+        public string FechaPublicacion { get; set; }
     }
 }
