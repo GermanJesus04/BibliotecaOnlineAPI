@@ -9,6 +9,7 @@ using BibliotecaOnlineApi.Model.Helpers;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
 {
@@ -17,15 +18,19 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
         private readonly AppDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapeo;
+        private readonly ILogger<PrestamoServicios> _logger;
+
         public PrestamoServicios(
-            AppDbContext appDbContext, 
-            IMapper mapeo, 
-            UserManager<IdentityUser> userManager
+            AppDbContext appDbContext,
+            IMapper mapeo,
+            UserManager<IdentityUser> userManager,
+            ILogger<PrestamoServicios> logger
             )
         {
             _context = appDbContext;
             _mapeo = mapeo;
             _userManager = userManager;
+            _logger = logger;
         }
 
         public async Task<RespuestaWebApi<PaginadoResult<PrestamoResponseDTO>>> 
@@ -36,6 +41,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
                 var query =  _context.Prestamos
                     .Include(l => l.Libro)
                     .Include(i => i.Usuario)
+                    .Where(c=>c.Eliminado == false)
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(idUser)) 
@@ -56,9 +62,17 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
                 };
 
             }
+            catch (ExcepcionPeticionApi ex)
+            {
+                // Log de la excepción específica
+                _logger.LogError(ex, "Error al consultar los préstamos: {Message}", ex.Message);
+                throw;
+            }
             catch (Exception ex)
             {
-                throw;
+                // Log de cualquier otra excepción
+                _logger.LogError(ex, "Error inesperado la consulta de préstamos");
+                throw new ExcepcionPeticionApi("Ha ocurrido un error inesperado. Por favor, intente nuevamente.", 500);
             }
         }
 
@@ -68,30 +82,24 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
         {
             try
             {
-                //1. To Do: Verificar si libro esta prestado actualmente
-                var prestamoExiste = await _context.Prestamos
-                    .FirstOrDefaultAsync(p =>p.LibroId.Equals(prestamoDto.LibroId));
 
-                if(prestamoExiste != null)
-                {
-                    var fechaDev = prestamoExiste.FechaDevolucion.Value.ToString("yyyyMMdd");
-                    var fechaAct = DateTime.UtcNow.ToString("yyyyMMdd");
-                    
-                    if (Int32.Parse(fechaDev) > Int32.Parse(fechaAct))
-                        throw new ExcepcionPeticionApi($"Libro ya ha sido prestado, vuelva el {prestamoExiste.FechaDevolucion.ToString()}",400);
-                    
-                }
+                // Verificar si el libro ya está prestado y obtener detalles del usuario y el libro en una sola llamada
+                var prestamoExiste = await _context.Prestamos
+                    .Where(p => p.LibroId == prestamoDto.LibroId && p.FechaDevolucion > DateTime.UtcNow)
+                    .FirstOrDefaultAsync();
+
+                if (prestamoExiste != null)
+                    throw new ExcepcionPeticionApi($"Libro ya ha sido prestado, vuelva el {prestamoExiste.FechaDevolucion}", 400);
+                
 
                 //1. To Do: verificar user existe
                 var userExiste = await _userManager.FindByIdAsync(prestamoDto.UsuarioId);
-
                 if (userExiste == null)
                     throw new ExcepcionPeticionApi("El usuario No existe", 400);
 
 
                 //2. To Do: verificar libro existe
                 var libroExiste = await _context.Libros.FindAsync(prestamoDto.LibroId);
-
                 if (libroExiste == null)
                     throw new ExcepcionPeticionApi("El usuario No existe", 400);
 
@@ -119,9 +127,18 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
                     data = result
                 };
 
-            }catch (Exception ex)
+            }
+            catch (ExcepcionPeticionApi ex)
             {
+                // Log de la excepción específica
+                _logger.LogError(ex, "Error en la creación del préstamo: {Message}", ex.Message);
                 throw;
+            }
+            catch (Exception ex)
+            {
+                // Log de cualquier otra excepción
+                _logger.LogError(ex, "Error inesperado en la creación del préstamo");
+                throw new ExcepcionPeticionApi("Ha ocurrido un error inesperado. Por favor, intente nuevamente.", 500);
             }
         }
 
@@ -131,13 +148,13 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
         {
             try
             {
-                //validar prestamo
-                var prestamoExiste = await _context.Prestamos.FindAsync(id);
-                if (prestamoExiste == null)
-                    throw new ExcepcionPeticionApi("id prestamo invalido", 400);
+                // Validar si el préstamo existe
+                var prestamo = await _context.Prestamos.FindAsync(id);
+                if (prestamo == null)
+                    throw new ExcepcionPeticionApi("ID de préstamo inválido", 400);
 
                 //To do: validar usuario, debe ser el mismo
-                if (prestamoExiste.UsuarioId != prestamoDto.UsuarioId)
+                if (prestamo.UsuarioId != prestamoDto.UsuarioId)
                     throw new ExcepcionPeticionApi("El usuario no puede ser modificado", 400);
                 
                 //To do: validar si libro existe
@@ -145,53 +162,48 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
                 if (libroExiste == null)
                     throw new ExcepcionPeticionApi("libro no encontrado", 400);
 
-                //To do: validar si se cambia el libro, debe ser en el mismo dia del prestamo
-                string fechaActual = DateTime.UtcNow.ToString("yyyyMMd")+ DateTime.UtcNow.ToString("HH");
-                string fechaPrestamo = prestamoExiste.FechaPrestamo.ToString("yyyyMMdd")+ 
-                                         prestamoExiste.FechaPrestamo.ToString("HH");
+                // Validar si el libro prestado se cambia el mismo día del préstamo
+                bool esMismoDia = prestamo.FechaPrestamo.Date == DateTime.UtcNow.Date;
+                if (prestamo.LibroId != prestamoDto.LibroId && !esMismoDia)
+                    throw new ExcepcionPeticionApi("El libro prestado no puede ser cambiado días después de ser prestado", 400);
 
-                if (!prestamoExiste.LibroId.Equals(prestamoDto.LibroId))
+                // Validar si el nuevo libro está disponible
+                if (prestamo.LibroId != prestamoDto.LibroId)
                 {
-                    if(Int32.Parse(fechaActual) > Int32.Parse(fechaPrestamo))
-                        throw new ExcepcionPeticionApi("El libro prestado no puede ser cambiado dias despues de ser prestado", 400);
+                    var nuevoPrestamo = await _context.Prestamos
+                        .FirstOrDefaultAsync(x => x.LibroId == prestamoDto.LibroId && x.FechaDevolucion > DateTime.UtcNow);
 
-                    //validar si el nuevo esta disponible y no esta prestado
-                    var libNewPrestado = await _context.Prestamos
-                        .FirstOrDefaultAsync(x=>x.LibroId.Equals(prestamoDto.LibroId));
-
-                    var fecDevLibPrestado = libNewPrestado.FechaDevolucion.Value.ToString("yyyyMMMdd") + 
-                        libNewPrestado.FechaDevolucion.Value.ToString("HH");
-
-                    if (Int32.Parse(fecDevLibPrestado) > Int32.Parse(fechaActual))
-                        throw new ExcepcionPeticionApi("El nuevo libro ingresado no esta disponible", 400);
+                    if (nuevoPrestamo != null)
+                        throw new ExcepcionPeticionApi("El nuevo libro ingresado no está disponible", 400);
                 }
 
-                //to do: validar fechas devolucion nueva solo puede ser igual o mayor a la fecha actual
-                var nuevaFechaDev = prestamoExiste.FechaPrestamo.AddDays(prestamoDto.DiasPrestado);
-                var FormatNuvFecha = nuevaFechaDev.ToString("yyyyMMdd")+nuevaFechaDev.ToString("HH");
+                // Validar si la nueva fecha de devolución es válida
+                var nuevaFechaDevolucion = prestamo.FechaPrestamo.AddDays(prestamoDto.DiasPrestado);
+                if (nuevaFechaDevolucion < DateTime.UtcNow)
+                    throw new ExcepcionPeticionApi("Los días de préstamo deben ser mayores o iguales a los días ya consumidos", 400);
 
-                if (Int32.Parse(FormatNuvFecha) < Int32.Parse(fechaActual))
-                    throw new ExcepcionPeticionApi("los dias de prestado debe ser mayo o igual a los dias ya consumidos", 400);
 
-                
-                prestamoExiste.LibroId = prestamoDto.LibroId;
-                prestamoExiste.FechaDevolucion = nuevaFechaDev;
-                prestamoExiste.FechaActualizacion = DateTime.UtcNow;
-                prestamoExiste.UsuarioActualizacion = prestamoDto.UsuarioId;
+                // Actualizar los datos del préstamo
+                prestamo.LibroId = prestamoDto.LibroId;
+                prestamo.FechaDevolucion = nuevaFechaDevolucion;
+                prestamo.FechaActualizacion = DateTime.UtcNow;
+                prestamo.UsuarioActualizacion = prestamoDto.UsuarioId;
 
-                _context.Prestamos.Update(prestamoExiste);
+                _context.Prestamos.Update(prestamo);
                 await _context.SaveChangesAsync();
+
+                var prestamoResponseDto = _mapeo.Map<PrestamoResponseDTO>(prestamo);
 
                 return new RespuestaWebApi<PrestamoResponseDTO>
                 {
                     mensaje = "Prestamo Actualizado Exitosamente",
-                    data = _mapeo.Map<PrestamoResponseDTO>(prestamoExiste)
+                    data = prestamoResponseDto
                 };
 
             }
             catch (Exception ex)
             {
-                throw;
+                throw new ExcepcionPeticionApi("Ocurrió un error al actualizar el préstamo: " + ex.Message, 500);
             }
         }
 
@@ -201,24 +213,25 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
             {
                 var prestamo = await _context.Prestamos.FindAsync(id);
 
-                if (prestamo == null || prestamo.Eliminado == true)
+                if (prestamo == null || prestamo.Eliminado)
                     throw new ExcepcionPeticionApi("Id invalido", 400);
 
                 prestamo.Eliminado = true;
                 prestamo.FechaEliminacion = DateTime.UtcNow;
                 prestamo.UsuarioEliminacion = "na";
 
-                _context.Prestamos.Update(prestamo);
+                _context.Entry(prestamo).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
                 return new RespuestaWebApi<bool>
                 {
-                    mensaje = "pendiente",
+                    mensaje = "Anulado Exitosamente",
                     data = true
                 };
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
-                throw;
+                throw new ExcepcionPeticionApi("Ocurrió un error al anular el préstamo: " + ex.Message, 500);
             }
         }
     }
