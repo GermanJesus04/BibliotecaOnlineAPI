@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BibliotecaOnlineApi.Infraestructura.Migrations
 {
     /// <inheritdoc />
-    public partial class MigracionIncial : Migration
+    public partial class migracioninicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,6 +30,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Age = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -56,9 +57,11 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TITULO = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    DESCRIPCION = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AUTOR = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    GENERO = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FECHA_PUBLICACION = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GENERO = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PRECIO = table.Column<int>(type: "int", nullable: false),
+                    FECHA_LANZAMIENTO = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FECHA_CREACION = table.Column<DateTime>(type: "datetime2", nullable: false),
                     USUARIO_CREACION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     FECHA_ACTUALIZACION = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -271,9 +274,9 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LIBRO_TITULO_AUTOR",
+                name: "IX_LIBRO_TITULO_AUTOR_GENERO",
                 table: "LIBRO",
-                columns: new[] { "TITULO", "AUTOR" });
+                columns: new[] { "TITULO", "AUTOR", "GENERO" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PRESTAMO_LIBRO_ID",

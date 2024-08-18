@@ -1,10 +1,13 @@
 ﻿using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio.Interfaces;
 using BibliotecaOnlineApi.Model.DTOs.PrestamosDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("[controller]")]
     [ApiController]
     public class PrestamoController : ControllerBase

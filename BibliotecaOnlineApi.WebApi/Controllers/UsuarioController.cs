@@ -1,12 +1,13 @@
 ﻿using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio.Interfaces;
-using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
+using BibliotecaOnlineApi.Model.DTOs.UsuarioDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class UsuarioController : ControllerBase
@@ -50,6 +51,93 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
             }
         }
+
+        [HttpGet("ObtenerUserId")]
+        public async Task<IActionResult> ObtenerUserId(string id)
+        {
+            try
+            {
+                var result = await _usuarioServicios.ObtenerUserId(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+        
+        [HttpPut("EditarUser")]
+        public async Task<IActionResult> EditarUser(UserRequestDTO  userRequest)
+        {
+            try
+            {
+                var result = await _usuarioServicios.EditarUser(userRequest);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
+
+        [HttpDelete("EliminarUser")]
+        public async Task<IActionResult> EliminarUser(string id)
+        {
+            try
+            {
+                var result = await _usuarioServicios.EliminarUser(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
+
 
     }
 }

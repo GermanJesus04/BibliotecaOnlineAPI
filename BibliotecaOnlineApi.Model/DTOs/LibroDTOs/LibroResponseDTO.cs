@@ -11,17 +11,11 @@ namespace BibliotecaOnlineApi.Model.DTOs.LibroDTOs
     {
         [Required]
         public Guid Id { get; set; }
-
-        [Required]
-        public string Titulo { get; set; }
-
-        [Required]
-        public string Autor { get; set; }
-
-        [Required]
-        public string Genero { get; set; }
-
-        [Required]
-        public string FechaPublicacion { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public string Autor { get; set; } = string.Empty;
+        public string Genero { get; set; } = string.Empty;
+        public int Precio { get; set; }
+        public DateTime FechaLanzamiento { get; set; }
     }
 }

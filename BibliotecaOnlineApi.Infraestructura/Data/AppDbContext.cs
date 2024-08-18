@@ -1,11 +1,12 @@
-﻿using BibliotecaOnlineApi.Model.Modelo;
+﻿using BibliotecaOnlineApi.Infraestructura.HelpierConfiguracion;
+using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BibliotecaOnlineApi.Infraestructura.Data
 {
-    public class AppDbContext : IdentityDbContext<IdentityUser>
+    public class AppDbContext : IdentityDbContext<User, IdentityRole, string>
     {
         public DbSet<Libro> Libros { get; set; }
         public DbSet<Prestamo> Prestamos { get; set; }
@@ -20,7 +21,10 @@ namespace BibliotecaOnlineApi.Infraestructura.Data
 
             // Configuración de índices
             modelBuilder.Entity<Libro>()
-                .HasIndex(l => new { l.Titulo, l.Autor });
+                .HasIndex(l => new { l.Titulo, l.Autor, l.Genero });
+
+            modelBuilder.ApplyConfiguration(new RolesConfiguracion());
+
         }
 
     }

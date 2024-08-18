@@ -23,15 +23,21 @@ namespace BibliotecaOnlineApi.Model.Modelo
 
         [Column("TITULO")]
         public required string Titulo { get; set; }
-        
+
+        [Column("DESCRIPCION")]
+        public required string Descripcion { get; set; }
+
         [Column("AUTOR")]
         public required string Autor { get; set; }
         
         [Column("GENERO")]
         public required string Genero { get; set; }
-        
-        [Column("FECHA_PUBLICACION")]
-        public required DateTime FechaPublicacion { get; set; }
+
+        [Column("PRECIO")]
+        public required int Precio { get; set; }
+
+        [Column("FECHA_LANZAMIENTO")]
+        public required DateTime FechaLanzamiento { get; set; }
     }
 
 }

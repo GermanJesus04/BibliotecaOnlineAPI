@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BibliotecaOnlineApi.Model.DTOs.LibroDTOs
 {
-    public class LibroFiltroDto
+    public class FiltroLibroRequestDto
     {
         public string Titulo {  get; set; } = string.Empty;
         public string Genero { get; set; } = string.Empty;

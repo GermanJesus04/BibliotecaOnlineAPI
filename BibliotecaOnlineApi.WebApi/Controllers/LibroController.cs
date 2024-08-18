@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "User")]
     [Route("[controller]")]
     [ApiController]
     public class LibroController : ControllerBase
@@ -57,7 +57,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpGet("ListarLibros")]
-        public async Task<IActionResult> ListarLibros(LibroFiltroDto? filtros, int pagina, int tamañoPagina)
+        public async Task<IActionResult> ListarLibros(FiltroLibroRequestDto? filtros, int pagina, int tamañoPagina)
         {
             try
             {

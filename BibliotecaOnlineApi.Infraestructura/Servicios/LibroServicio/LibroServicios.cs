@@ -55,7 +55,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
         }
 
         public async Task<RespuestaWebApi<PaginadoResult<LibroResponseDTO>>> 
-            ListarLibros(LibroFiltroDto? filtros, int pagina, int tamañoPagina)
+            ListarLibros(FiltroLibroRequestDto? filtros, int pagina, int tamañoPagina)
         {
             try
             {

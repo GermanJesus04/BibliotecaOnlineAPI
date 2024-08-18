@@ -16,36 +16,21 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
 {
     public class AutenticacionServicios : IAutenticacionServicios
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly TokenValidationParameters _parametrosValidacionToken;
 
-        private string _JwtTiempoVencimiento
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_configuration.GetSection("JwtConfig:tiempoVencimiento").Value))
-                    throw new InvalidOperationException("Variable de entorno no encontrada");
+        private string _jwtTiempoVencimiento => _configuration["JwtConfig:tiempoVencimiento"]
+            ?? throw new InvalidOperationException("Variable de entorno no encontrada");
 
-                return _configuration.GetSection("JwtConfig:tiempoVencimiento").Value;
-            }
-        }
-        private string _JwtSecret
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_configuration.GetSection("JwtConfig:Secret").Value))
-                    throw new InvalidOperationException("Variable de entorno no encontrada");
-
-                return _configuration.GetSection("JwtConfig:Secret").Value;
-            }
-        }
+        private string _jwtSecret => _configuration["JwtConfig:Secret"]
+            ?? throw new InvalidOperationException("Variable de entorno no encontrada");
 
 
         public AutenticacionServicios
             (
-            UserManager<IdentityUser> userManager, 
+            UserManager<User> userManager, 
             AppDbContext context,
             IConfiguration configuration,
             TokenValidationParameters parametrosValidacionToken
@@ -58,7 +43,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
         }
 
 
-        public async Task<AuthResult> UserRegistrar(RegistrarUserRequestDTO userRequest)
+        public async Task<RespuestaWebApi<AuthResult>> UserRegistrar(RegistrarUserRequestDTO userRequest)
         {
             try
             {
@@ -67,24 +52,28 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 if (userExiste != null)
                     throw new ExcepcionPeticionApi("Email ya existe", 400);
 
-                var nuevoUser = new IdentityUser()
+                var nuevoUser = new User()
                 {
                     UserName = userRequest.name,
-                    Email = userRequest.email
+                    Email = userRequest.email,
+                    Age = 24
                 };
 
-                var isCreated = await _userManager.CreateAsync(nuevoUser, userRequest.password);
+                //generar token
+                await _userManager.AddToRoleAsync(nuevoUser, "User");
+                var result = await GenerarTokenJwt(nuevoUser, new List<string> { "User" });
 
+                var isCreated = await _userManager.CreateAsync(nuevoUser, userRequest.password);
                 if (!isCreated.Succeeded)
                     throw new ExcepcionPeticionApi(
-                        isCreated.Errors.FirstOrDefault().Description, 400);
+                        isCreated.Errors.FirstOrDefault()?.Description ??
+                        "Error en la creación de usuario", 400);
 
-                //generar token
-                var result = await GenerarTokenJwt(nuevoUser);
-
-                
-                return result;
-
+                return new RespuestaWebApi<AuthResult>
+                {
+                    mensaje = "Usuario registrado exitosamente",
+                    data = result
+                };
 
             }
             catch (Exception ex)
@@ -92,107 +81,108 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 // Revertir la transacción en caso de error
                 var transaction = _context.Database.BeginTransaction();
                 transaction.Rollback();
-
-                throw ex;
+                throw new ExcepcionPeticionApi("Error al registrar usuario: " + ex.Message, 500);
             }
-            //}
         }
 
-        public async Task<AuthResult> loginUser(LoginUserRequestDTO loginRequestDto) 
+        public async Task<RespuestaWebApi<AuthResult>> loginUser(LoginUserRequestDTO loginRequestDto) 
         {
             try
             {
                 //validar email
                 var userExiste = await _userManager.FindByEmailAsync(loginRequestDto.email);
-
                 if (userExiste == null)
                     throw new ExcepcionPeticionApi("Credenciales Invalidas", 400);
 
                 //validar  combinacion email-password
                 var isCorrect = await _userManager.CheckPasswordAsync(userExiste, loginRequestDto.password);
-
                 if (isCorrect == false)
                     throw new ExcepcionPeticionApi("Credenciales Invalidas", 400);
 
+                //verificar rol
+                var roles = await _userManager.GetRolesAsync(userExiste);
+
                 //generar token 
-                var result = await GenerarTokenJwt(userExiste);
+                var result = await GenerarTokenJwt(userExiste, roles);
 
-                return result;
-
-
-            }catch (Exception ex)
+                return new RespuestaWebApi<AuthResult>
+                {
+                    mensaje = "Login exitoso",
+                    data = result
+                };
+            }
+            catch (Exception ex)
             {
-                throw;
+                throw new ExcepcionPeticionApi("Error al iniciar sesión: " + ex.Message, 500);
             }
         }
 
-        public async Task<AuthResult> UserTokenRefresh(TokenRequest tokenRequest)
+        public async Task<RespuestaWebApi<AuthResult>> UserTokenRefresh(TokenRequest tokenRequest)
         {
             try
             {
                 var result = await VerificarYGenerarToken(tokenRequest);
-
                 if (result == null)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
 
-                return result;
+                return new RespuestaWebApi<AuthResult>
+                {
+                    mensaje = "Token refrescado exitosamente",
+                    data = result
+                };
 
             }
             catch (Exception ex)
             {
-                throw;
+                throw new ExcepcionPeticionApi("Error al refrescar token: " + ex.Message, 500);
             }
         }
           
 
         //Metodos Privados
-        private async Task<AuthResult> GenerarTokenJwt(IdentityUser user)
+        private async Task<AuthResult> GenerarTokenJwt(User user, IList<string> roles)
         {
-
-            var jwtTokenHandlet = new JwtSecurityTokenHandler();
-
-            #region Generar Token
-            //*****GENERAR TOKEN******
-
-
             ///obtener la llave
-            var key = Encoding.ASCII.GetBytes(_JwtSecret);
+            var key = Encoding.ASCII.GetBytes(_jwtSecret);
 
-            if (!TimeSpan.TryParse(_JwtTiempoVencimiento, out TimeSpan tiempoVencimientoSpan))
+            if (!TimeSpan.TryParse(_jwtTiempoVencimiento, out TimeSpan tiempoVencimientoSpan))
                 throw new ArgumentException("El valor de tiempo de vencimiento es inválido.");
 
-            DateTime utcNow = DateTime.UtcNow;
-            DateTime tokenExpiration = utcNow.Add(tiempoVencimientoSpan);
+            var ClaimsList = new List<Claim>()
+            {
+                new("id", user.Id),
+                new(JwtRegisteredClaimNames.Sub, user.Email),
+                new(JwtRegisteredClaimNames.Email, user.Email),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
+            };
+
+            //agregar roles
+            ClaimsList.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+            
+
+
+            #region Generar Token
 
             ///crear descriptor de token (armar el token)
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim("id", user.Id),
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
-                }),
-
-                ///especificar cuanto durara el token
-                
-                Expires = tokenExpiration,
+                Subject = new ClaimsIdentity(ClaimsList),
+                Expires = DateTime.UtcNow.Add(tiempoVencimientoSpan),
                 //NotBefore = DateTime.UtcNow,
 
                 ///agregar las credenciales de firma
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-                                                                      SecurityAlgorithms.HmacSha256)
-
+                                                                SecurityAlgorithms.HmacSha256)
             };
 
-            ///el TokenHandlet tiene la funcionalidad de convertir un dato de tipo SegurityToken a string, por eso el write
+            ///el TokenHandlet puede convertir un dato de tipo SegurityToken a string, usando write
+            var jwtTokenHandlet = new JwtSecurityTokenHandler();
             var token = jwtTokenHandlet.CreateToken(tokenDescriptor);
             var jwtToken = jwtTokenHandlet.WriteToken(token);
 
             #endregion
-
+             
 
             //*****GENERAR REFRESH TOKEN******
 
@@ -231,59 +221,50 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             {
                 _parametrosValidacionToken.ValidateLifetime = false; //debe ser true, false solo para testing
 
-                //le pasamos el toke, los parametros  y nos traera si es validado o no
-                var tokenVerificacion = ManejadorTokenJwt.ValidateToken(tokenRequest.Token, 
+                ///le pasamos el toke, los parametros  y nos traera si es validado o no
+                var tokenVerificacion = ManejadorTokenJwt.ValidateToken(tokenRequest.Token,
                                             _parametrosValidacionToken, out var TokenValidado);
 
                 //***validar que el token es JWT y debe cumplir ciertas reglas
 
-                //*Regla 1: validar soutiliza el algoritmo HMAC-SHA256
+                //*Regla 1: validar si utiliza el algoritmo HMAC-SHA256
 
-                ///Comprueba si el token validado es un "JwtSecurityToken" (pertenece a jwt).
-                if (TokenValidado is JwtSecurityToken jwtSecurityToken)
+                ///Comprueba si el token validado es un "JwtSecurityToken" (pertenece a jwt) y 
+                ///Comprueba si el algoritmo utilizado en el header del token es HMAC-SHA256.
+                if (TokenValidado is JwtSecurityToken jwtSecurityToken &&
+                    !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                        StringComparison.InvariantCultureIgnoreCase))
                 {
-                    //Comprueba si el algoritmo utilizado en el header del token es HMAC-SHA256.
-                    var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, 
-                        StringComparison.InvariantCultureIgnoreCase);
-
-                    if (result == false)
-                        return null;
+                    return null;
                 }
 
+
                 //verificar cuando se genero este token que nos traen
-                var FechaVencimientoUTC = long.Parse(tokenVerificacion.Claims.FirstOrDefault(x =>
-                                                x.Type == JwtRegisteredClaimNames.Exp).Value);
+                var ExpiraClaim = tokenVerificacion.Claims.FirstOrDefault(x =>
+                                            x.Type == JwtRegisteredClaimNames.Exp)?.Value;
 
-                var fechaVencimiento = FechaUnidadxMarcaDeTiempo(FechaVencimientoUTC);
+                if (long.TryParse(ExpiraClaim, out var exp) &&
+                    FechaUnidadxMarcaDeTiempo(exp) > DateTime.UtcNow
+                    )
+                    throw new ExcepcionPeticionApi("Token vencido", 400);
 
-                if (fechaVencimiento > DateTime.UtcNow)
-                    throw new ExcepcionPeticionApi("Token Vencido",400);
 
                 //Verificar si el token pertece al usuario
-                var tokenAlmacenado = await _context.RefreshTokens.FirstOrDefaultAsync(x 
-                                                        =>x.Token == tokenRequest.RefreshToken);
+                var tokenAlmacenado = await _context.RefreshTokens.FirstOrDefaultAsync(x
+                                                     => x.Token == tokenRequest.RefreshToken);
 
-                if (tokenAlmacenado == null)
+                if (tokenAlmacenado == null || tokenAlmacenado.EstaUsado || tokenAlmacenado.EstaRevocado)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
 
-                if (tokenAlmacenado.EstaUsado)
-                    throw new ExcepcionPeticionApi("Tokens no validos", 400);
-                
-                if (tokenAlmacenado.EstaRevocado)
-                    throw new ExcepcionPeticionApi("Tokens no validos", 400);
 
                 //verificar jti sea el mismo (aparece en los claims de generar token)
-                var jti = tokenVerificacion.Claims.FirstOrDefault(x=> 
+                var jti = tokenVerificacion.Claims.FirstOrDefault(x =>
                                                 x.Type == JwtRegisteredClaimNames.Jti).Value;
 
-                if(tokenAlmacenado.JwtId != jti)
+                //y comparar fecha de caducidad
+                if (tokenAlmacenado.JwtId != jti || tokenAlmacenado.FechaVencimiento < DateTime.UtcNow)
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
-                
-                //comparar fecha de caducidad
-                if (tokenAlmacenado.FechaVencimiento < DateTime.UtcNow)
-                    throw new ExcepcionPeticionApi("Tokens no validos", 400);
-                
-                
+
                 //el refresh token se empezara a usar, debe actualizarlo y guardarlo
                 tokenAlmacenado.EstaUsado = true;
                 _context.RefreshTokens.Update(tokenAlmacenado);
@@ -291,32 +272,28 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
 
                 //generar nuevo refresh token para el usuario
                 var dbUser = await _userManager.FindByIdAsync(tokenAlmacenado.UserId);
-
                 if (dbUser == null)
                     throw new ExcepcionPeticionApi("token invalido", 400);
 
-                return await GenerarTokenJwt(dbUser);
+                var roles = await _userManager.GetRolesAsync(dbUser);
+
+                return await GenerarTokenJwt(dbUser, roles);
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                throw;
-                
-                //nota: el flujo de este metodo esta en el diagrama
+                throw new ExcepcionPeticionApi("Error al verificar y generar token: " + ex.Message, 500);
             }
         }
 
         private DateTime FechaUnidadxMarcaDeTiempo(long unidadxTimestamp)
         {
             //UTC  es cada segundo desde 1970, que es la proxima marca de tiempo y es para convertirlo
-            var valorFecha = new DateTime(year: 1970, month: 1, day: 1, hour: 0, minute: 0, second: 0, millisecond: 0, DateTimeKind.Utc);
+            var fechaBase = new DateTime(year: 1970, month: 1, day: 1, hour: 0, minute: 0, second: 0, millisecond: 0, DateTimeKind.Utc);
 
             //tomaremos la fecha desde 1970, luego le agregamos los segundos
             //y luego la convertimos a la marca de tiempo universal 
-            valorFecha = valorFecha.AddSeconds(unidadxTimestamp).ToUniversalTime();
-            
-            return valorFecha;
+            return fechaBase.AddSeconds(unidadxTimestamp).ToUniversalTime();
         }
 
         private string GeneradorCadenasAleatorias(int tamaño)

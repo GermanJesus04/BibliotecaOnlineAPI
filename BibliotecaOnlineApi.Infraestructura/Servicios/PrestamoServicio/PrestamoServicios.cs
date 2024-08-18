@@ -16,20 +16,20 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
     public class PrestamoServicios : IPrestamoServicios
     {
         private readonly AppDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
         private readonly IMapper _mapeo;
         private readonly ILogger<PrestamoServicios> _logger;
 
         public PrestamoServicios(
             AppDbContext appDbContext,
             IMapper mapeo,
-            UserManager<IdentityUser> userManager,
+            UserManager<User> userManager,
             ILogger<PrestamoServicios> logger
             )
         {
             _context = appDbContext;
             _mapeo = mapeo;
-            _userManager = userManager;
+            _userManager = userManager; 
             _logger = logger;
         }
 

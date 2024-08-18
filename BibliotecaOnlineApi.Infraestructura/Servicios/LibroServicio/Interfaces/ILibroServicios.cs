@@ -12,7 +12,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio.Interfaces
     {
         public Task<RespuestaWebApi<LibroResponseDTO>> CrearLibro(LibroRequestDTO libroDto);
         public Task<RespuestaWebApi<PaginadoResult<LibroResponseDTO>>> ListarLibros(
-            LibroFiltroDto? filtros, int pagina, int tamañoPagina);
+            FiltroLibroRequestDto? filtros, int pagina, int tamañoPagina);
         public Task<RespuestaWebApi<LibroResponseDTO>> ObtenerLibroPorId(Guid id);
         public Task<RespuestaWebApi<bool>> ActualizarLibro(Guid id, LibroRequestDTO libroDto);
         public Task<RespuestaWebApi<bool>> SoftDeleteLibro(Guid id);

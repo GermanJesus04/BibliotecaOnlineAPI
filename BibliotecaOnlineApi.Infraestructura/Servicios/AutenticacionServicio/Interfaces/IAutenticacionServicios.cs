@@ -11,8 +11,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.In
 {
     public interface IAutenticacionServicios
     {
-        public Task<AuthResult> UserRegistrar(RegistrarUserRequestDTO userRequest);
-        public Task<AuthResult> loginUser(LoginUserRequestDTO loginRequestDto);
-        public Task<AuthResult> UserTokenRefresh(TokenRequest tokenRequest);
+        Task<RespuestaWebApi<AuthResult>> UserRegistrar(RegistrarUserRequestDTO userRequest);
+        Task<RespuestaWebApi<AuthResult>> loginUser(LoginUserRequestDTO loginRequestDto);
+        Task<RespuestaWebApi<AuthResult>> UserTokenRefresh(TokenRequest tokenRequest);
     }
 }

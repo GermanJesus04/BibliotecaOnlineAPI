@@ -44,9 +44,9 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
                     opc => opc.MapFrom((fuente, dest) =>
                     string.IsNullOrEmpty(fuente.Genero) ? dest.Genero: fuente.Genero))
                 .ForMember(
-                    dest => dest.FechaPublicacion, opc => opc
+                    dest => dest.FechaLanzamiento, opc => opc
                     .MapFrom(
-                        fuente => fuente.FechaPublicacion.ToString("yyyy/MM/dd")
+                        fuente => fuente.FechaLanzamiento.ToString("yyyy/MM/dd")
                     )
                 )
                 .ReverseMap();
@@ -72,8 +72,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
             #endregion
                 .ReverseMap();
             
-            CreateMap<IdentityUser, UsuarioDto>();
-            CreateMap<IdentityUser, UserResponseDTO>();
+            CreateMap<User, UserRequestDTO>();
+            CreateMap<User, UserResponseDTO>();
 
         }
     }

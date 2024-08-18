@@ -37,6 +37,6 @@ namespace BibliotecaOnlineApi.Model.Modelo
 
 
         public Libro Libro { get; set; }
-        public IdentityUser Usuario { get; set; }
+        public User Usuario { get; set; }
     }
 }

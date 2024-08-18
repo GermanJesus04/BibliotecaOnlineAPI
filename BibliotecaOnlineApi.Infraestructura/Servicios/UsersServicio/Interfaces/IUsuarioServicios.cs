@@ -10,6 +10,9 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio.Interfaces
 {
     public interface IUsuarioServicios
     {
-        public Task<RespuestaWebApi<IEnumerable<UserResponseDTO>>> ListarUsers();
+        Task<RespuestaWebApi<bool>> EditarUser(UserRequestDTO UserDto);
+        Task<RespuestaWebApi<bool>> EliminarUser(string id);
+        Task<RespuestaWebApi<IEnumerable<UserResponseDTO>>> ListarUsers();
+        Task<RespuestaWebApi<UserResponseDTO>> ObtenerUserId(string id);
     }
 }
