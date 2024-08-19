@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace BibliotecaOnlineApi.Model.DTOs.UsuarioDTOs
 {
-    public class UsuarioDto
+    public class UsuarioListResponse
     {
+        public string Id { get; set; }
         public string UserName { get; set; }
         public string Email { get; set; }
+        public bool Eliminado { get; set; }
     }
 
 }

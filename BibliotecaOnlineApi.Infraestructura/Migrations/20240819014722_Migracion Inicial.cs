@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace BibliotecaOnlineApi.Infraestructura.Migrations
 {
     /// <inheritdoc />
-    public partial class migracioninicial : Migration
+    public partial class MigracionInicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,7 +32,11 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Age = table.Column<int>(type: "int", nullable: false),
+                    Edad = table.Column<int>(type: "int", nullable: false),
+                    FECHA_CREACION = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FECHA_ACTUALIZACION = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FECHA_ELIMINACION = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    REGISTRO_ELIMINADO = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -140,8 +146,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
@@ -185,8 +191,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -232,6 +238,15 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                         principalTable: "LIBRO",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "8bcb9a40-3e05-44e4-8765-601b47623f84", null, "Admin", "ADMIN" },
+                    { "9885c044-b21c-4a44-88ad-416ece757bbb", null, "User", "USER" }
                 });
 
             migrationBuilder.CreateIndex(

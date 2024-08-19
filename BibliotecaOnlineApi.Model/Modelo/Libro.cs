@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -37,6 +38,7 @@ namespace BibliotecaOnlineApi.Model.Modelo
         public required int Precio { get; set; }
 
         [Column("FECHA_LANZAMIENTO")]
+        [DataType(DataType.DateTime)]
         public required DateTime FechaLanzamiento { get; set; }
     }
 

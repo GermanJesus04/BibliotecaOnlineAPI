@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -30,9 +31,11 @@ namespace BibliotecaOnlineApi.Model.Modelo
         public string UsuarioId { get; set; }
 
         [Column("FECHA_PRESTAMO")]
+        [DataType(DataType.DateTime)]
         public DateTime FechaPrestamo { get; set; }
         
         [Column("FECHA_DEVOLUCION")]
+        [DataType(DataType.DateTime)]
         public DateTime? FechaDevolucion { get; set; }
 
 

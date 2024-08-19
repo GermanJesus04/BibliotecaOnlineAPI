@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio.Interfaces;
 using BibliotecaOnlineApi.Model.DTOs.UsuarioDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
 {
-    public class UsuarioServicios: IUsuarioServicios
+    public class UsuarioServicios : IUsuarioServicios
     {
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapeo;
@@ -18,25 +19,30 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
             _mapeo = mapeo;
         }
 
-        public async Task<RespuestaWebApi<IEnumerable<UserResponseDTO>>> ListarUsers()
+        public async Task<RespuestaWebApi<IEnumerable<UsuarioListResponse>>> ListarUsers(string? id)
         {
             try
             {
-                var users = await _userManager.Users.ToListAsync();
+                var query = _userManager.Users.AsQueryable();
 
-                if (users == null || users.Count == 0)
-                    throw new ExcepcionPeticionApi("No hay usuarios registrados", 400);
+                if(!string.IsNullOrEmpty(id))
+                    query = query.Where(x=>x.Id.Equals(id));
+                //var result = query.ProjectTo<UsuarioListResponse>(_mapeo.ConfigurationProvider);
 
-                var result = users.Select(c => new UserResponseDTO()
+                var result = query.Select(c => new UsuarioListResponse()
                 {
                     Id = c.Id,
                     UserName = c.UserName,
-                    Email = c.Email
+                    Email = c.Email,
+                    Eliminado = c.Eliminado
                 });
+                
+                if (result == null || result.Count() <= 0)
+                    throw new ExcepcionPeticionApi("No hay usuarios registrados", 400);
 
-                return new RespuestaWebApi<IEnumerable<UserResponseDTO>> ()
+                return new RespuestaWebApi<IEnumerable<UsuarioListResponse>>()
                 {
-                    data = result 
+                    data = result
                 };
 
             }
@@ -51,7 +57,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
             try
             {
                 var User = await _userManager.FindByIdAsync(id);
-                if (User == null)
+                if (User == null || User.Eliminado == true)
                     throw new ExcepcionPeticionApi("No se encontraron resultados", 400);
 
                 var result = _mapeo.Map<UserResponseDTO>(User);
@@ -60,19 +66,23 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
             }
             catch (Exception ex)
             {
-                throw ;
+                throw;
             }
-           
+
         }
 
-        public async Task<RespuestaWebApi<bool>> EditarUser( UserRequestDTO UserDto)
+        public async Task<RespuestaWebApi<bool>> EditarUser(UserRequestDTO UserDto)
         {
             try
             {
                 var user = await _userManager.FindByIdAsync(UserDto.Id);
-
+                if (user == null || user.Eliminado == true)
+                    throw new ExcepcionPeticionApi("No se encontraron datos, id invalido", 400);
+                
                 user.UserName = UserDto.UserName;
                 user.Email = UserDto.Email;
+                user.Edad = UserDto.Edad;
+                user.FechaActualizacion = DateTime.UtcNow;
 
                 var resul = await _userManager.UpdateAsync(user);
 
@@ -84,9 +94,10 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
                     mensaje = "Actualizado Correctamente",
                     data = resul.Succeeded
                 };
-               
 
-            }catch(Exception ex)
+
+            }
+            catch (Exception ex)
             {
                 throw;
             }
@@ -105,10 +116,37 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
                 if (!result.Succeeded)
                     throw new ExcepcionPeticionApi("Error al intentar eliminar el usuario", 400);
 
-                return new RespuestaWebApi<bool> 
+                return new RespuestaWebApi<bool>
                 {
                     mensaje = "Usuario Eliminado Correctamente",
-                    data = result.Succeeded 
+                    data = result.Succeeded
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<RespuestaWebApi<bool>> SoftDeleteUser(string id)
+        {
+            try
+            {
+                var User = await _userManager.FindByIdAsync(id);
+                if (User == null || User.Eliminado == true)
+                    throw new ExcepcionPeticionApi("No se encontraron resultados", 400);
+
+                User.Eliminado = false;
+                User.FechaEliminacion = DateTime.UtcNow;
+                var result = await _userManager.UpdateAsync(User);
+
+                if (!result.Succeeded)
+                    throw new ExcepcionPeticionApi("Error al intentar deshabilitar el usuario", 400);
+
+                return new RespuestaWebApi<bool>
+                {
+                    mensaje = "Usuario borrados Correctamente",
+                    data = result.Succeeded
                 };
             }
             catch (Exception ex)
@@ -116,8 +154,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio
                 throw;
             }
 
+
         }
-
-
     }
 }

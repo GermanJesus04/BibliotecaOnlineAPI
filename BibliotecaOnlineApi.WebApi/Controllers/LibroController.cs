@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "User")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("[controller]")]
     [ApiController]
     public class LibroController : ControllerBase
@@ -27,6 +27,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpPost("CrearLibro")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CrearLibro([FromBody] LibroRequestDTO libroDto)
         {
             try
@@ -55,8 +56,8 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
-
         [HttpGet("ListarLibros")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> ListarLibros(FiltroLibroRequestDto? filtros, int pagina, int tamañoPagina)
         {
             try
@@ -84,8 +85,8 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
-
         [HttpGet("ObtenerLibroPorId")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetLibroId(Guid id)
         {
             try
@@ -113,8 +114,8 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
-
         [HttpPut("ActualizarLibro")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ActualizarLibro(Guid id, LibroRequestDTO libroRequest)
         {
             try
@@ -143,6 +144,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPut("BorrarLibro")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> BorrarLibro(Guid id)
         {
             try
@@ -171,6 +173,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPut("EliminarLibro")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EliminarLibro(Guid id)
         {
             try

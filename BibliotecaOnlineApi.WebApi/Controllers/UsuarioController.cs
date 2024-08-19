@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Route("[controller]")]
     [ApiController]
     public class UsuarioController : ControllerBase
     {
@@ -25,11 +25,12 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpGet("ListarUsers")]
-        public async Task<IActionResult> UsersLibros()
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ListarUsers(string? id)
         {
             try
             {
-                var result = await _usuarioServicios.ListarUsers();
+                var result = await _usuarioServicios.ListarUsers(id);
                 return Ok(result);
             }
             catch (ExcepcionPeticionApi ex)
@@ -53,6 +54,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpGet("ObtenerUserId")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> ObtenerUserId(string id)
         {
             try
@@ -82,6 +84,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
         
         [HttpPut("EditarUser")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> EditarUser(UserRequestDTO  userRequest)
         {
             try
@@ -111,6 +114,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpDelete("EliminarUser")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EliminarUser(string id)
         {
             try
@@ -138,6 +142,34 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
+        [HttpPut("InhabilitarUser")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> BorrarUser(string id)
+        {
+            try
+            {
+                var result = await _usuarioServicios.EliminarUser(id);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
+
+            }
+        }
 
     }
 }

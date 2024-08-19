@@ -33,15 +33,15 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
             _logger = logger;
         }
 
+        //admin
         public async Task<RespuestaWebApi<PaginadoResult<PrestamoResponseDTO>>> 
-            ObtenerPrestamos(string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+            GetAllPrestamos(string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
         {
             try
             {
                 var query =  _context.Prestamos
                     .Include(l => l.Libro)
                     .Include(i => i.Usuario)
-                    .Where(c=>c.Eliminado == false)
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(idUser)) 
@@ -76,7 +76,48 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio
             }
         }
 
-        
+
+        public async Task<RespuestaWebApi<PaginadoResult<PrestamoResponseDTO>>>
+            ObtenerPrestamos(string idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+        {
+            try
+            {
+                var query = _context.Prestamos
+                    .Include(l => l.Libro)
+                    .Include(i => i.Usuario)
+                    .Where(c => c.Eliminado == false && c.UsuarioId.Equals(idUser))
+                    .AsQueryable();
+                
+                if (idLibro.HasValue)
+                    query = query.Where(p => p.LibroId.Equals(idLibro));
+
+                var prestamos = await query.ProjectTo<PrestamoResponseDTO>(_mapeo.ConfigurationProvider)
+                    .ObtenerPaginado(Pagina, tamañoPagina);
+
+                if (prestamos.TotalElementos == 0)
+                    throw new ExcepcionPeticionApi("no hay prestamos en el sistema", 204);
+
+                return new RespuestaWebApi<PaginadoResult<PrestamoResponseDTO>>()
+                {
+                    data = prestamos
+                };
+
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                // Log de la excepción específica
+                _logger.LogError(ex, "Error al consultar los préstamos: {Message}", ex.Message);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Log de cualquier otra excepción
+                _logger.LogError(ex, "Error inesperado la consulta de préstamos");
+                throw new ExcepcionPeticionApi("Ha ocurrido un error inesperado. Por favor, intente nuevamente.", 500);
+            }
+        }
+
+
         public async Task<RespuestaWebApi<PrestamoResponseDTO>> 
             CrearPrestamo(PrestamoRequestDTO prestamoDto)
         {

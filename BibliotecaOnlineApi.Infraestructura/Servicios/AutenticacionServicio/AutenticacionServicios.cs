@@ -56,18 +56,20 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 {
                     UserName = userRequest.name,
                     Email = userRequest.email,
-                    Age = 24
+                    Edad = userRequest.Edad
                 };
-
-                //generar token
-                await _userManager.AddToRoleAsync(nuevoUser, "User");
-                var result = await GenerarTokenJwt(nuevoUser, new List<string> { "User" });
 
                 var isCreated = await _userManager.CreateAsync(nuevoUser, userRequest.password);
                 if (!isCreated.Succeeded)
-                    throw new ExcepcionPeticionApi(
-                        isCreated.Errors.FirstOrDefault()?.Description ??
+                    throw new ExcepcionPeticionApi(isCreated.Errors.FirstOrDefault()?.Description ??
                         "Error en la creación de usuario", 400);
+
+
+                await _userManager.AddToRoleAsync(nuevoUser, "User");
+
+                // Generar token
+                var roles = await _userManager.GetRolesAsync(nuevoUser);
+                var result = await GenerarTokenJwt(nuevoUser, roles);
 
                 return new RespuestaWebApi<AuthResult>
                 {

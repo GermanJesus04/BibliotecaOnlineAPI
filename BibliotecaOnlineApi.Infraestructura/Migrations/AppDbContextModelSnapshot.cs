@@ -218,12 +218,16 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Edad")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("bit")
+                        .HasColumnName("REGISTRO_ELIMINADO");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -231,6 +235,18 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("FechaActualizacion")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_ACTUALIZACION");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_CREACION");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_ELIMINACION");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -307,13 +323,13 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "c893266a-ede5-4724-902b-cd11ef7dd559",
+                            Id = "9885c044-b21c-4a44-88ad-416ece757bbb",
                             Name = "User",
                             NormalizedName = "USER"
                         },
                         new
                         {
-                            Id = "4781cb41-57c5-4902-b6d4-31ed47dd9c65",
+                            Id = "8bcb9a40-3e05-44e4-8765-601b47623f84",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         });
@@ -372,12 +388,10 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -414,12 +428,10 @@ namespace BibliotecaOnlineApi.Infraestructura.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");

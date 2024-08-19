@@ -13,6 +13,9 @@ namespace BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs
         public string Apellido { get; set; }
 
         [Required]
+        public int Edad{ get; set; }
+
+        [Required]
         [EmailAddress]
         public string email { get; set; }
 

@@ -27,9 +27,39 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             _logger = logger;
         }
 
+        [HttpGet("GetAllPrestamos")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllPrestamos(string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+        {
+            try
+            {
+                var result = await _prestamoServicios.GetAllPrestamos(idUser, idLibro, Pagina, tamañoPagina);
+                return Ok(result);
+            }
+            catch (ExcepcionPeticionApi ex)
+            {
+                return StatusCode(ex.CodigoError, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, _configuration.GetSection("MensajeErrorInterno").Value);
+                return StatusCode(500, new RespuestaWebApi<object>
+                {
+                    exito = false,
+                    mensaje = "Ejecucion No Exitosa. Error en la ejecucion del proceso"
+                });
 
-        [HttpGet("ListarPrestamos")]
-        public async Task<IActionResult> ObtenerPrestamos(string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+            }
+        }
+
+
+        [HttpGet("ListarPrestamosUser")]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> ObtenerPrestamos(string idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
         {
             try
             {
@@ -57,6 +87,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPost("CrearPrestamo")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> CrearPrestamos(PrestamoRequestDTO prestamoDto)
         {
             try
@@ -85,6 +116,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPut("ActualizarPrestamo")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> ActPrestamos(Guid id,PrestamoRequestDTO prestamoDto)
         {
             try
@@ -113,6 +145,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPut("AnularPrestamo")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> BorrarPrestamos(Guid id)
         {
             try
