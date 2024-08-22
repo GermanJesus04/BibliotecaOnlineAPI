@@ -90,6 +90,15 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 #endregion
 
 
+const string misReglasCors = "ReglasCors";
+builder.Services.AddCors(opc => 
+{
+    opc.AddPolicy(name: misReglasCors, builder =>
+    {
+        builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
 ///inyeccion servicios  
 builder.Services.AddScoped<IAutenticacionServicios, AutenticacionServicios>();
 builder.Services.AddScoped<ILibroServicios, LibroServicios>();
@@ -111,6 +120,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(misReglasCors);
 
 app.UseHttpsRedirection();
 

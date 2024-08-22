@@ -1,11 +1,13 @@
 ﻿using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.Interfaces;
 using BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
+    [EnableCors("ReglasCors")]
     [Route("[controller]")]
     [ApiController]
     public class AutenticacionController : ControllerBase
