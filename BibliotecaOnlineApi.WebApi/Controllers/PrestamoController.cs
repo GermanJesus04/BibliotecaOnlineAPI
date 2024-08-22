@@ -24,14 +24,15 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             ILogger<PrestamoController> logger
             )
         {
-            _prestamoServicios = prestamoServicios;
-            _configuration = config;
-            _logger = logger;
+            _prestamoServicios = prestamoServicios ?? throw new ArgumentNullException(nameof(prestamoServicios));
+            _configuration = config ?? throw new ArgumentNullException(nameof(config));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpGet("GetAllPrestamos")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllPrestamos(string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+        public async Task<IActionResult> GetAllPrestamos(
+            string? idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
         {
             try
             {
@@ -60,8 +61,9 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpGet("ListarPrestamosUser")]
-        [Authorize(Roles = "User")]
-        public async Task<IActionResult> ObtenerPrestamos(string idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> ObtenerPrestamos(
+            string idUser, Guid? idLibro, int Pagina = 1, int tamañoPagina = 10)
         {
             try
             {
@@ -87,6 +89,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
             }
         }
+
 
         [HttpPost("CrearPrestamo")]
         [Authorize(Roles = "Admin,User")]

@@ -22,9 +22,9 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             IConfiguration configuration, 
             ILogger<AutenticacionController> logger)
         {
-            _autenticacionServicios = autenticacionServicios;
-            _configuration = configuration;
-            _logger = logger;
+            _autenticacionServicios = autenticacionServicios ?? throw new ArgumentNullException(nameof(autenticacionServicios));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
 

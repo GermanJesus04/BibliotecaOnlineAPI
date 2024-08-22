@@ -19,12 +19,16 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<AutenticacionController> _logger;
 
-        public UsuarioController(IUsuarioServicios usuarioServicios, IConfiguration configuration, ILogger<AutenticacionController> logger)
+        public UsuarioController(
+            IUsuarioServicios usuarioServicios, 
+            IConfiguration configuration, 
+            ILogger<AutenticacionController> logger)
         {
-            _usuarioServicios = usuarioServicios;
-            _configuration = configuration;
-            _logger = logger;
+            _usuarioServicios = usuarioServicios ?? throw new ArgumentNullException(nameof(usuarioServicios));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
 
         [HttpGet("ListarUsers")]
         [Authorize(Roles = "Admin")]
@@ -115,9 +119,9 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
 
-        [HttpDelete("EliminarUser")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> EliminarUser(string id)
+        [HttpPut("InhabilitarUser")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> BorrarUser(string id)
         {
             try
             {
@@ -144,9 +148,9 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
-        [HttpPut("InhabilitarUser")]
-        [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> BorrarUser(string id)
+        [HttpDelete("EliminarUser")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EliminarUser(string id)
         {
             try
             {

@@ -20,11 +20,14 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<AutenticacionController> _logger;
 
-        public LibroController(ILibroServicios libroServicios, IConfiguration configuration, ILogger<AutenticacionController> logger)
+        public LibroController(
+            ILibroServicios libroServicios, 
+            IConfiguration configuration, 
+            ILogger<AutenticacionController> logger)
         {
-            _libroServicios = libroServicios;
-            _configuration = configuration;
-            _logger = logger;
+            _libroServicios = libroServicios ?? throw new ArgumentNullException(nameof(libroServicios));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
 
@@ -58,9 +61,9 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
-        [HttpGet("ListarLibros")]
+        [HttpPost("ListarLibros")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> ListarLibros(FiltroLibroRequestDto? filtros, int pagina, int tamañoPagina)
+        public async Task<IActionResult> ListarLibros(FiltroLibroRequestDto? filtros, int pagina = 1, int tamañoPagina = 5)
         {
             try
             {
@@ -174,7 +177,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
             }
         }
 
-        [HttpPut("EliminarLibro")]
+        [HttpDelete("EliminarLibro")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EliminarLibro(Guid id)
         {
