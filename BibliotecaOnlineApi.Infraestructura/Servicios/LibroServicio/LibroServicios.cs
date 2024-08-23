@@ -8,13 +8,11 @@ using BibliotecaOnlineApi.Model.DTOs.LibroDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
 {
     public class LibroServicios : ILibroServicios
     {
-
         private readonly AppDbContext _context;
         private readonly IMapper _mappeo;
 
@@ -72,9 +70,8 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
                     
 
                 if (query.Count() <= 0)
-                    throw new ExcepcionPeticionApi("no hay libros en el sistema", 402);
-
-
+                    throw new ExcepcionPeticionApi("no hay libros en el sistema", 204);
+                
                 var libros = await query.ProjectTo<LibroResponseDTO>(_mappeo.ConfigurationProvider)
                                         .ObtenerPaginado(pagina, tamañoPagina);
 
@@ -120,7 +117,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.LibroServicio
 
                 var nombreEnUso = await _context.Libros.FirstOrDefaultAsync(c=>c.Titulo.Equals(libroDto.Titulo));
 
-                if (nombreEnUso != null)
+                if (nombreEnUso != null && !nombreEnUso.Id.Equals(id))
                     throw new ExcepcionPeticionApi("El Titulo ya esta en uso", 400);
 
                 //mapeamos la info que esta en el dto y se la pasamos a la entidad modificando los valores

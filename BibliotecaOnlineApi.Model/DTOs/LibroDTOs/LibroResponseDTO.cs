@@ -16,6 +16,6 @@ namespace BibliotecaOnlineApi.Model.DTOs.LibroDTOs
         public string Autor { get; set; } = string.Empty;
         public string Genero { get; set; } = string.Empty;
         public int Precio { get; set; }
-        public DateTime FechaLanzamiento { get; set; }
+        public required string FechaLanzamiento { get; set; }
     }
 }

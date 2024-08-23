@@ -46,7 +46,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Mappeos
                 .ForMember(
                     dest => dest.FechaLanzamiento, opc => opc
                     .MapFrom(
-                        fuente => fuente.FechaLanzamiento.ToString("yyyy/MM/dd")
+                        fuente => fuente.FechaLanzamiento.ToString("dd/MM/yyyy")
                     )
                 )
                 .ReverseMap();

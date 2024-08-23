@@ -29,7 +29,6 @@ namespace BibliotecaOnlineApi.Model.DTOs.LibroDTOs
         public int Precio { get; set; }
 
         [Required(ErrorMessage = "La Fecha es Obligatoria")]
-        [DataType(DataType.Date)]
         public DateTime FechaLanzamiento { get; set; }
     }
 
