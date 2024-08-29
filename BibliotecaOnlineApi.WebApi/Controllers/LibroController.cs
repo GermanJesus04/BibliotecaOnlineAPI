@@ -4,13 +4,15 @@ using BibliotecaOnlineApi.Model.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
     [EnableCors("ReglasCors")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [SwaggerTag("Servicio encargado de Gestionar Libros.")]
+    [SwaggerResponse(400, "Ejecución no exitosa. No se obtuvieron datos correctos.", typeof(RespuestaWebApi<object>))]
+    [SwaggerResponse(500, "Ejecución No exitosa. Fallo al lado del servidor.", typeof(RespuestaWebApi<object>))]
     [Route("[controller]")]
     [ApiController]
     public class LibroController : ControllerBase
@@ -32,7 +34,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
 
 
         [HttpPost("CrearLibro")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> CrearLibro([FromBody] LibroRequestDTO libroDto)
         {
             try
@@ -62,7 +64,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPost("ListarLibros")]
-        [Authorize(Roles = "Admin,User")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,User")]
         public async Task<IActionResult> ListarLibros(FiltroLibroRequestDto? filtros, int pagina = 1, int tamañoPagina = 5)
         {
             try
@@ -91,7 +93,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpGet("ObtenerLibroPorId")]
-        [Authorize(Roles = "Admin,User")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,User")]
         public async Task<IActionResult> GetLibroId(Guid id)
         {
             try
@@ -120,7 +122,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPut("ActualizarLibro")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> ActualizarLibro(Guid id, LibroRequestDTO libroRequest)
         {
             try
@@ -149,7 +151,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpPut("BorrarLibro")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> BorrarLibro(Guid id)
         {
             try
@@ -178,7 +180,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         }
 
         [HttpDelete("EliminarLibro")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> EliminarLibro(Guid id)
         {
             try

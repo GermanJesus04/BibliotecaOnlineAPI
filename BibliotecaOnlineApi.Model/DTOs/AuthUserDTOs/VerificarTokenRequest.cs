@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs
 {
-    public class TokenRequest
+    public class VerificarTokenRequest
     {
         [Required]
         public string Token {  get; set; }

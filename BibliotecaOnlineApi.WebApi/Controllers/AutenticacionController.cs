@@ -120,7 +120,7 @@ namespace BibliotecaOnlineApi.WebApi.Controllers
         [SwaggerResponse(204, "Ejecución exitosa. No se encontraron datos.", typeof(RespuestaWebApi<object>))]
         [SwaggerResponse(200, "Ejecución exitosa.", typeof(RespuestaWebApi<object>))]
         [HttpPost("RefreshToken")]
-        public async Task<IActionResult> RefreshToken([FromBody] TokenRequest requestDto)
+        public async Task<IActionResult> RefreshToken([FromBody] VerificarTokenRequest requestDto)
         {
             try
             {

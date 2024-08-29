@@ -1,3 +1,4 @@
+using BibliotecaOnlineApi.Infraestructura.Configuracion.ConfiguracionJwt;
 using BibliotecaOnlineApi.Infraestructura.Data;
 using BibliotecaOnlineApi.Infraestructura.HelpierConfiguracion;
 using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio;
@@ -8,52 +9,17 @@ using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio.Interfaces;
 using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio.Interfaces;
-using BibliotecaOnlineApi.Model.Configuracion;
+using BibliotecaOnlineApi.Model.DTOs.JwtDTOs;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
-#region ***Configuracion de autenticacion con JWT***
-builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
-
-var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("JwtConfig:Secret").Value);
-
-///para verifica los parametros del token sean correctos
-var ParametrosValidacionToken = new TokenValidationParameters()
-{
-    ValidateIssuerSigningKey = true, ///por cada peticion, verifica la clave de firma del emisor
-    IssuerSigningKey = new SymmetricSecurityKey(key), ///compara nuestra clave con la que el token envia, y deben ser iguales (simetria)
-    ValidateIssuer = false, ///debe ser true, pero en proyecto local al generarlo causa un problema, para fines de prueba se pone false
-    ValidateAudience = false, ///solo para fines de prueba es falso
-    ValidateLifetime = true,
-    RequireExpirationTime = false, ///solo para practica, ya que los token jwt son de corta duracion, solo viven 30 segundos, y no tener que generar otros
-    ClockSkew = TimeSpan.Zero
-};
-
-builder.Services.AddSingleton(ParametrosValidacionToken);
-
-///actualizamos el middelware para que sepa que hay una autenticacion que debe verificar
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-})
-.AddJwtBearer(jwt =>
-{
-    jwt.SaveToken = true;
-    jwt.TokenValidationParameters = ParametrosValidacionToken;
-});
-
-#endregion
 
 
 #region **Configuracion DbContext
@@ -68,6 +34,38 @@ builder.Services.AddDbContext<AppDbContext>(opcion =>
 });
 #endregion
 
+
+builder.Services.ConfigurarJwt(builder.Configuration);
+
+#region configurar swagger para que detecte el jwt
+builder.Services.AddSwaggerGen(
+    opciones =>
+    {
+        opciones.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header, //donde va a ir al bearer token
+            Description = "JWT Autorizacion header"
+        });
+
+        opciones.AddSecurityRequirement(new OpenApiSecurityRequirement()
+        {{
+            new OpenApiSecurityScheme ()
+            {
+                Reference =  new OpenApiReference()
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string []{ }
+        }});
+    }
+);
+#endregion
 
 #region ***Configuracion de Identity
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -90,6 +88,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 #endregion
 
 
+//configuracion de Cors
 const string misReglasCors = "ReglasCors";
 builder.Services.AddCors(opc => 
 {
@@ -98,6 +97,7 @@ builder.Services.AddCors(opc =>
         builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
+
 
 ///inyeccion servicios  
 builder.Services.AddScoped<IAutenticacionServicios, AutenticacionServicios>();

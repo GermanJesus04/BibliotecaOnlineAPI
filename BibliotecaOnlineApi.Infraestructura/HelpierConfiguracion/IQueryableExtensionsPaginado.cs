@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BibliotecaOnlineApi.Infraestructura.HelpierConfiguracion
 {
-    public static class IQueryableExtensions
+    public static class IQueryableExtensionsPaginado
     {
         public static async Task<PaginadoResult<T>> ObtenerPaginado<T>(
             this IQueryable<T> query, int pagina, int tamañoPagina)

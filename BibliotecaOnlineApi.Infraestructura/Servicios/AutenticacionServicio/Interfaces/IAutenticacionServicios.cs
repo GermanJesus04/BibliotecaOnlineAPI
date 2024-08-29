@@ -1,5 +1,5 @@
-﻿using BibliotecaOnlineApi.Model.Configuracion;
-using BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs;
+﻿using BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs;
+using BibliotecaOnlineApi.Model.DTOs.JwtDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,6 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.In
     {
         Task<RespuestaWebApi<AuthResult>> UserRegistrar(RegistrarUserRequestDTO userRequest);
         Task<RespuestaWebApi<AuthResult>> loginUser(LoginUserRequestDTO loginRequestDto);
-        Task<RespuestaWebApi<AuthResult>> UserTokenRefresh(TokenRequest tokenRequest);
+        Task<RespuestaWebApi<AuthResult>> UserTokenRefresh(VerificarTokenRequest tokenRequest);
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BibliotecaOnlineApi.Model.Configuracion
+namespace BibliotecaOnlineApi.Model.DTOs.JwtDTOs
 {
     public class AuthResult
     {

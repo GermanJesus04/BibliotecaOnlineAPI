@@ -1,12 +1,12 @@
-﻿using BibliotecaOnlineApi.Infraestructura.Data;
+﻿using AutoMapper;
+using BibliotecaOnlineApi.Infraestructura.Data;
 using BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio.Interfaces;
-using BibliotecaOnlineApi.Model.Configuracion;
 using BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs;
+using BibliotecaOnlineApi.Model.DTOs.JwtDTOs;
 using BibliotecaOnlineApi.Model.Helpers;
 using BibliotecaOnlineApi.Model.Modelo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,28 +18,21 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
     {
         private readonly UserManager<User> _userManager;
         private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly TokenValidationParameters _parametrosValidacionToken;
-
-        private string _jwtTiempoVencimiento => _configuration["JwtConfig:tiempoVencimiento"]
-            ?? throw new InvalidOperationException("Variable de entorno no encontrada");
-
-        private string _jwtSecret => _configuration["JwtConfig:Secret"]
-            ?? throw new InvalidOperationException("Variable de entorno no encontrada");
-
+        private readonly JwtParametros _jwtParametros;
+        private readonly IMapper _mapeo;
 
         public AutenticacionServicios
             (
-            UserManager<User> userManager, 
-            AppDbContext context,
-            IConfiguration configuration,
-            TokenValidationParameters parametrosValidacionToken
+               UserManager<User> userManager,
+               AppDbContext context,
+               JwtParametros jwtParametros,
+               IMapper mapeo
             )
         {
             _userManager = userManager;
             _context = context;
-            _configuration = configuration;
-            _parametrosValidacionToken = parametrosValidacionToken;
+            _jwtParametros = jwtParametros;
+            _mapeo = mapeo;
         }
 
 
@@ -119,7 +112,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             }
         }
 
-        public async Task<RespuestaWebApi<AuthResult>> UserTokenRefresh(TokenRequest tokenRequest)
+        public async Task<RespuestaWebApi<AuthResult>> UserTokenRefresh(VerificarTokenRequest tokenRequest)
         {
             try
             {
@@ -140,15 +133,10 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             }
         }
           
-
         //Metodos Privados
         private async Task<AuthResult> GenerarTokenJwt(User user, IList<string> roles)
         {
-            ///obtener la llave
-            var key = Encoding.ASCII.GetBytes(_jwtSecret);
-
-            if (!TimeSpan.TryParse(_jwtTiempoVencimiento, out TimeSpan tiempoVencimientoSpan))
-                throw new ArgumentException("El valor de tiempo de vencimiento es inválido.");
+            var key = Encoding.ASCII.GetBytes(_jwtParametros.Key);
 
             var ClaimsList = new List<Claim>()
             {
@@ -159,35 +147,27 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 new(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
             };
 
-            //agregar roles
+            ///agregar roles
             ClaimsList.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
             
 
-
-            #region Generar Token
-
-            ///crear descriptor de token (armar el token)
+            //**Generar Token**
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
                 Subject = new ClaimsIdentity(ClaimsList),
-                Expires = DateTime.UtcNow.Add(tiempoVencimientoSpan),
-                //NotBefore = DateTime.UtcNow,
-
-                ///agregar las credenciales de firma
+                Expires = DateTime.UtcNow.Add(_jwtParametros.tiempoVencimiento),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
                                                                 SecurityAlgorithms.HmacSha256)
             };
 
-            ///el TokenHandlet puede convertir un dato de tipo SegurityToken a string, usando write
+            ///Convertir token a string
             var jwtTokenHandlet = new JwtSecurityTokenHandler();
             var token = jwtTokenHandlet.CreateToken(tokenDescriptor);
             var jwtToken = jwtTokenHandlet.WriteToken(token);
 
-            #endregion
-             
-
+            
+            
             //*****GENERAR REFRESH TOKEN******
-
             var tokenRefresh = new RefreshToken()
             {
                 JwtId = token.Id,
@@ -212,27 +192,23 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
 
         }
 
-        private async Task<AuthResult> VerificarYGenerarToken(TokenRequest tokenRequest)
+        private async Task<AuthResult> VerificarYGenerarToken(VerificarTokenRequest tokenRequest)
         {
-
-            // "JwtSecurityTokenHandler" Esta es una clase de.NET que se utiliza para
-            // crear, leer, validar y escribir tokens de seguridad JWT(JSON Web Tokens).
             var ManejadorTokenJwt = new JwtSecurityTokenHandler();
 
             try
             {
-                _parametrosValidacionToken.ValidateLifetime = false; //debe ser true, false solo para testing
+               
+                var TokenParametros = _mapeo.Map<TokenValidationParameters>(_jwtParametros);
+                TokenParametros.ClockSkew = TimeSpan.Zero;
+                TokenParametros.ValidateLifetime = false;
+
 
                 ///le pasamos el toke, los parametros  y nos traera si es validado o no
                 var tokenVerificacion = ManejadorTokenJwt.ValidateToken(tokenRequest.Token,
-                                            _parametrosValidacionToken, out var TokenValidado);
+                                            TokenParametros, out var TokenValidado);
 
-                //***validar que el token es JWT y debe cumplir ciertas reglas
-
-                //*Regla 1: validar si utiliza el algoritmo HMAC-SHA256
-
-                ///Comprueba si el token validado es un "JwtSecurityToken" (pertenece a jwt) y 
-                ///Comprueba si el algoritmo utilizado en el header del token es HMAC-SHA256.
+                //validar si utiliza el algoritmo HMAC-SHA256
                 if (TokenValidado is JwtSecurityToken jwtSecurityToken &&
                     !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                         StringComparison.InvariantCultureIgnoreCase))
@@ -251,7 +227,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                     throw new ExcepcionPeticionApi("Token vencido", 400);
 
 
-                //Verificar si el token pertece al usuario
+                //Verificar si el token pertenece al usuario
                 var tokenAlmacenado = await _context.RefreshTokens.FirstOrDefaultAsync(x
                                                      => x.Token == tokenRequest.RefreshToken);
 
@@ -259,7 +235,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                     throw new ExcepcionPeticionApi("Tokens no validos", 400);
 
 
-                //verificar jti sea el mismo (aparece en los claims de generar token)
+                //verificar jti sea el mismo
                 var jti = tokenVerificacion.Claims.FirstOrDefault(x =>
                                                 x.Type == JwtRegisteredClaimNames.Jti).Value;
 
@@ -288,13 +264,11 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             }
         }
 
+
         private DateTime FechaUnidadxMarcaDeTiempo(long unidadxTimestamp)
         {
-            //UTC  es cada segundo desde 1970, que es la proxima marca de tiempo y es para convertirlo
-            var fechaBase = new DateTime(year: 1970, month: 1, day: 1, hour: 0, minute: 0, second: 0, millisecond: 0, DateTimeKind.Utc);
-
-            //tomaremos la fecha desde 1970, luego le agregamos los segundos
-            //y luego la convertimos a la marca de tiempo universal 
+            var fechaBase = new DateTime(year: 1970, month: 1, day: 1, hour: 0, 
+                                        minute: 0, second: 0, millisecond: 0, DateTimeKind.Utc);
             return fechaBase.AddSeconds(unidadxTimestamp).ToUniversalTime();
         }
 
