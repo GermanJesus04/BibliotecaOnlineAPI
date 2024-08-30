@@ -8,6 +8,9 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace BibliotecaOnlineApi.WebApi.Controllers
 {
     [EnableCors("ReglasCors")]
+    [SwaggerTag("Servicio encargado de Gestionar Autenticacion.")]
+    [SwaggerResponse(400, "Ejecución no exitosa. No se obtuvieron datos correctos.", typeof(RespuestaWebApi<object>))]
+    [SwaggerResponse(500, "Ejecución No exitosa. Fallo al lado del servidor.", typeof(RespuestaWebApi<object>))]
     [Route("[controller]")]
     [ApiController]
     public class AutenticacionController : ControllerBase

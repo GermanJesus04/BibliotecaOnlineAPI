@@ -9,35 +9,44 @@ using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.PrestamoServicio.Interfaces;
 using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio;
 using BibliotecaOnlineApi.Infraestructura.Servicios.UsersServicio.Interfaces;
-using BibliotecaOnlineApi.Model.DTOs.JwtDTOs;
 using BibliotecaOnlineApi.Model.Modelo;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-#region **Configuracion DbContext
 const string nombreConexion = "NombreConexion";
 var ConfigConexion = builder.Configuration.GetConnectionString(nombreConexion);
-
 builder.Services.AddDbContext<AppDbContext>(opcion =>
 {
     opcion.UseSqlServer(
         ConfigConexion ?? throw new InvalidOperationException("Cadena de conexion no encontrada")
         );
-});
-#endregion
+}); 
 
 
 builder.Services.ConfigurarJwt(builder.Configuration);
 
-#region configurar swagger para que detecte el jwt
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = false;
+    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedEmail = false;
+    options.Lockout.AllowedForNewUsers = false;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(4);
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders()
+.AddPasswordValidator<PasswordValidator<User>>();
+
+
 builder.Services.AddSwaggerGen(
     opciones =>
     {
@@ -65,28 +74,6 @@ builder.Services.AddSwaggerGen(
         }});
     }
 );
-#endregion
-
-#region ***Configuracion de Identity
-builder.Services.AddIdentity<User, IdentityRole>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = false;
-    options.SignIn.RequireConfirmedAccount = false;
-    options.SignIn.RequireConfirmedEmail = false;
-    options.Lockout.AllowedForNewUsers = false;
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(4);
-})
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders()
-.AddPasswordValidator<PasswordValidator<User>>();
-
-#endregion
-
 
 //configuracion de Cors
 const string misReglasCors = "ReglasCors";
@@ -151,6 +138,5 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
-
 
 app.Run();

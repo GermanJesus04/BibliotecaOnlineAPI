@@ -10,7 +10,7 @@ namespace BibliotecaOnlineApi.Model.DTOs.AuthUserDTOs
     public class VerificarTokenRequest
     {
         [Required]
-        public string Token {  get; set; }
+        public string TokenCaducado {  get; set; }
         
         [Required]
         public string RefreshToken { get; set; }

@@ -170,13 +170,13 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
             //*****GENERAR REFRESH TOKEN******
             var tokenRefresh = new RefreshToken()
             {
+                UserId = user.Id,
                 JwtId = token.Id,
                 Token = GeneradorCadenasAleatorias(23), ///generar refresh token
                 FechaAgredado = DateTime.UtcNow,
                 FechaVencimiento = DateTime.UtcNow.AddMonths(6),
                 EstaRevocado = false,
-                EstaUsado = false,
-                UserId = user.Id
+                EstaUsado = false
             };
 
             await _context.RefreshTokens.AddAsync(tokenRefresh);
@@ -204,27 +204,28 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                 TokenParametros.ValidateLifetime = false;
 
 
-                ///le pasamos el toke, los parametros  y nos traera si es validado o no
-                var tokenVerificacion = ManejadorTokenJwt.ValidateToken(tokenRequest.Token,
+                ///le pasamos el toke que ya venció para verificarlo con parametros jwt
+                var tokenVerificacion = ManejadorTokenJwt.ValidateToken(tokenRequest.TokenCaducado,
                                             TokenParametros, out var TokenValidado);
 
-                //validar si utiliza el algoritmo HMAC-SHA256
-                if (TokenValidado is JwtSecurityToken jwtSecurityToken &&
-                    !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                ///validar si utiliza el algoritmo HMAC-SHA256
+                if (TokenValidado is JwtSecurityToken jwtSecurityToken 
+                    && !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                         StringComparison.InvariantCultureIgnoreCase))
                 {
                     return null;
                 }
 
 
-                //verificar cuando se genero este token que nos traen
+                ///se obtiene el claim del tiempo de expiracion del token caducado
                 var ExpiraClaim = tokenVerificacion.Claims.FirstOrDefault(x =>
                                             x.Type == JwtRegisteredClaimNames.Exp)?.Value;
 
+                ///se verifica si el tokem vencio o aun esta vigente a ka fecha actual
                 if (long.TryParse(ExpiraClaim, out var exp) &&
                     FechaUnidadxMarcaDeTiempo(exp) > DateTime.UtcNow
                     )
-                    throw new ExcepcionPeticionApi("Token vencido", 400);
+                    throw new ExcepcionPeticionApi("Token no valido", 400);
 
 
                 //Verificar si el token pertenece al usuario
@@ -232,7 +233,7 @@ namespace BibliotecaOnlineApi.Infraestructura.Servicios.AutenticacionServicio
                                                      => x.Token == tokenRequest.RefreshToken);
 
                 if (tokenAlmacenado == null || tokenAlmacenado.EstaUsado || tokenAlmacenado.EstaRevocado)
-                    throw new ExcepcionPeticionApi("Tokens no validos", 400);
+                    throw new ExcepcionPeticionApi("Token no valido", 400);
 
 
                 //verificar jti sea el mismo
